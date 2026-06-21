@@ -422,6 +422,40 @@ export default function FounderPlan() {
           </motion.div>
         </div>
 
+        {/* Comparison Table — clear gap between Free and Founder */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="max-w-2xl mx-auto mt-10"
+        >
+          <div className="bg-white rounded-2xl border border-[#E8E1D2] shadow-sm overflow-hidden">
+            <div className="grid grid-cols-3 bg-[#FBF8F2] border-b border-[#E8E1D2]">
+              <div className="p-3 text-right text-xs font-bold text-[#5B564C]">الميزة</div>
+              <div className="p-3 text-center text-xs font-bold text-[#5B564C]">المجاني</div>
+              <div className="p-3 text-center text-xs font-bold text-[#0D7C66] bg-[#0D7C66]/5">الداعم المبكر</div>
+            </div>
+            {[
+              { feature: 'كتابة محتوى يومياً', free: '١٥ كتابة', founder: 'غير محدود' },
+              { feature: 'المنصات المدعومة', free: 'كل المنصات', founder: 'كل المنصات' },
+              { feature: 'الأولوية في الميزات', free: '—', founder: 'أولوية قصوى' },
+              { feature: 'السعر عند الإطلاق', free: 'مجاناً محدود', founder: 'ثابت مدى الحياة' },
+              { feature: 'شارة الداعم المبكر', free: '—', founder: '✓' },
+              { feature: 'التصويت على الميزات', free: '—', founder: '✓' },
+            ].map((row, idx) => (
+              <div
+                key={idx}
+                className={`grid grid-cols-3 ${idx % 2 === 0 ? 'bg-white' : 'bg-[#FBF8F2]/50'} border-b border-[#E8E1D2]/50 last:border-0`}
+              >
+                <div className="p-2.5 text-right text-xs text-[#211F1A] font-medium">{row.feature}</div>
+                <div className="p-2.5 text-center text-xs text-[#5B564C]">{row.free}</div>
+                <div className="p-2.5 text-center text-xs text-[#0D7C66] font-bold bg-[#0D7C66]/5">{row.founder}</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Vision note + value comparison + guarantee */}
         <motion.div
           initial={{ opacity: 0 }}
