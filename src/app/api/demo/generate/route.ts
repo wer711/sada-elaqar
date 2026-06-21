@@ -122,16 +122,16 @@ export async function POST(req: NextRequest) {
       : [];
 
     const input: PropertyInput = {
-      propertyType,
+      propertyType: sanitizeFreeText(propertyType, 50),
       family: resolvedFamily,
       purpose: resolvedPurpose,
       notes: sanitizedNotes,
-      city,
-      country,
-      area: area || '',
-      rooms: rooms || '',
-      price: price || '',
-      currency: currency || 'ريال',
+      city: sanitizeFreeText(city, 80),
+      country: country ? sanitizeFreeText(country, 80) : '',
+      area: area ? sanitizeFreeText(area, 20) : '',
+      rooms: rooms ? sanitizeFreeText(rooms, 20) : '',
+      price: price ? sanitizeFreeText(price, 30) : '',
+      currency: currency ? sanitizeFreeText(currency, 20) : 'ريال',
       features: sanitizedFeatures,
       customArea: sanitizedCustomArea || '',
       customCity: sanitizedCustomCity || '',
@@ -319,6 +319,10 @@ const INJECTION_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
 
 function sanitizeFreeText(raw: string, maxLen: number): string {
   let text = raw.trim();
+  // Strip HTML tags (XSS prevention) — removes <script>, <img onerror>, etc.
+  text = text.replace(/<[^>]*>/g, '');
+  // Strip HTML entities that could be used for XSS
+  text = text.replace(/&lt;|&gt;|&amp;|&quot;|&#x27;|&#x2F;|&lt;script/gi, '');
   for (const { pattern, replacement } of INJECTION_PATTERNS) {
     text = text.replace(pattern, replacement);
   }
