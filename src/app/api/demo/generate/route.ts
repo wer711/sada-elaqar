@@ -261,7 +261,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ...content, sessionId });
   } catch (error) {
     console.error('Demo generation error:', error);
-    return NextResponse.json({ error: 'حدث خطأ في التوليد' }, { status: 500 });
+    return NextResponse.json({ error: 'حدث خطأ في الكتابة' }, { status: 500 });
   }
 }
 
