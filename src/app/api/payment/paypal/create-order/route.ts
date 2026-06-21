@@ -25,7 +25,7 @@ import { db } from '@/lib/db';
  */
 
 const FOUNDER_PLAN_PRICE = 29; // USD
-const FOUNDER_PLAN_TARGET = 100;
+const FOUNDER_PLAN_TARGET = 50;
 
 // ─── PayPal access token (cached per request) ───
 async function getPayPalAccessToken(): Promise<string> {
