@@ -5,21 +5,28 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, ExternalLink } from 'lucide-react'
 
 // Public-facing WhatsApp number (Gulf-facing brand presence).
-// Sourced from NEXT_PUBLIC_WHATSAPP_NUMBER env var; falls back to a Saudi placeholder.
 const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '966500000000'
 
+/* ─── Quick reply options ───
+ * Each option opens WhatsApp directly with a pre-filled, professional message.
+ * The topics are chosen to be SERIOUS and NOT already answered on the page:
+ *   1. Partnership / investment in the project (for serious business people)
+ *   2. Enterprise / custom solution for large offices
+ *   3. Early access priority + founder plan details
+ * Using <a href> instead of window.open() to avoid popup blocker issues.
+ */
 const quickReplies = [
   {
-    label: '🎯 أريد تجربة المنتج',
-    action: 'demo',
+    label: '🤝 فرصة شراكة أو استثمار',
+    message: 'مرحباً، أرغب في مناقشة فرصة شراكة أو استثمار في مشروع صدى العقار. أريد معرفة التفاصيل والإمكانيات المتاحة.',
   },
   {
-    label: '💬 عندي سؤال',
-    action: 'question',
+    label: '🏢 حل مخصّص لمكتب/شركة',
+    message: 'مرحباً، أدير مكتب وساطة عقاري وأحتاج حلاً مخصّصاً لفريقي. أريد مناقشة باقات المؤسسات والمزايا الخاصة.',
   },
   {
-    label: '🏢 أريد عرضاً لشركتي',
-    action: 'company',
+    label: '⭐ تفاصيل باقة الداعم المبكر',
+    message: 'مرحباً، مهتم بباقة الداعم المبكر وأريد معرفة كل التفاصيل: المزايا الكاملة، طريقة الدفع، وكيف أحصل على الأولوية.',
   },
 ]
 
@@ -45,26 +52,9 @@ export default function WhatsAppWidget() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen])
 
-  function handleQuickReply(action: string) {
-    if (action === 'demo') {
-      setIsOpen(false)
-      const el = document.getElementById('demo')
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    } else if (action === 'question') {
-      window.open(
-        `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('مرحباً، عندي سؤال عن صدى العقار')}`,
-        '_blank'
-      )
-      setIsOpen(false)
-    } else if (action === 'company') {
-      window.open(
-        `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('مرحباً، أريد عرضاً خاصاً لشركتي')}`,
-        '_blank'
-      )
-      setIsOpen(false)
-    }
+  // Build WhatsApp URL for a given message
+  function buildWhatsAppUrl(message: string): string {
+    return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`
   }
 
   return (
@@ -103,20 +93,35 @@ export default function WhatsAppWidget() {
 
             {/* Body */}
             <div className="px-5 py-5">
-              <p className="text-[#5B564C] text-sm mb-4">كيف يمكننا مساعدتك؟</p>
+              <p className="text-[#5B564C] text-sm mb-4">كيف يمكننا مساعدتك؟ اختر ما يناسبك:</p>
 
               <div className="space-y-2.5">
                 {quickReplies.map((reply) => (
-                  <button
-                    key={reply.action}
-                    onClick={() => handleQuickReply(reply.action)}
-                    className="w-full text-right px-4 py-3 rounded-xl border border-[#E8E1D2] bg-[#FBF8F2] hover:bg-[#F5F0E8] hover:border-[#0D7C66]/30 transition-all text-sm font-medium text-[#211F1A] flex items-center justify-between group"
+                  <a
+                    key={reply.label}
+                    href={buildWhatsAppUrl(reply.message)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsOpen(false)}
+                    className="w-full text-right px-4 py-3 rounded-xl border border-[#E8E1D2] bg-[#FBF8F2] hover:bg-[#F5F0E8] hover:border-[#0D7C66]/30 transition-all text-sm font-medium text-[#211F1A] flex items-center justify-between group cursor-pointer"
                   >
                     <span>{reply.label}</span>
                     <ExternalLink className="w-3.5 h-3.5 text-[#5B564C] opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
+                  </a>
                 ))}
               </div>
+
+              {/* Direct WhatsApp link */}
+              <a
+                href={buildWhatsAppUrl('مرحباً، أريد التواصل معكم بخصوص صدى العقار')}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsOpen(false)}
+                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20BD5A] text-white text-sm font-bold transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                محادثة مباشرة على واتساب
+              </a>
             </div>
           </motion.div>
         )}
