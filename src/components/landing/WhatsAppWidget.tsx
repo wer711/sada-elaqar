@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, ExternalLink } from 'lucide-react'
 
-// Public-facing WhatsApp number (Gulf-facing brand presence).
-const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '966500000000'
+// WhatsApp number — hardcoded to the real operational number.
+// This bypasses the Vercel env var (which the user couldn't change in the dashboard).
+const WA_NUMBER = '213696212465'
 
 /* ─── Quick reply options ───
  * Each option opens WhatsApp directly with a pre-filled, professional message.
