@@ -88,10 +88,42 @@ export {
 
 let zaiInstance: Awaited<ReturnType<typeof ZAI.create>> | null = null;
 
+/**
+ * Get the ZAI SDK instance.
+ *
+ * Locally (Z.ai Code environment): uses .z-ai-config file automatically.
+ * On Vercel/production: constructs the instance directly from env vars
+ *   (Z_AI_BASE_URL, Z_AI_API_KEY, Z_AI_TOKEN, Z_AI_USER_ID)
+ *   because the .z-ai-config file isn't available on serverless.
+ */
 async function getZAI() {
-  if (!zaiInstance) {
+  if (zaiInstance) return zaiInstance;
+
+  // Try the default .create() first (works locally with .z-ai-config file)
+  try {
     zaiInstance = await ZAI.create();
+    return zaiInstance;
+  } catch {
+    // Config file not found — fall through to env-var based construction
   }
+
+  // Production: construct from environment variables
+  const baseUrl = process.env.Z_AI_BASE_URL;
+  const apiKey = process.env.Z_AI_API_KEY;
+  const token = process.env.Z_AI_TOKEN;
+  const userId = process.env.Z_AI_USER_ID;
+
+  if (!baseUrl || !apiKey) {
+    throw new Error('Z.AI configuration missing. Set Z_AI_BASE_URL and Z_AI_API_KEY env vars, or create .z-ai-config file.');
+  }
+
+  // Construct the ZAI instance directly with the config object
+  // (bypasses the file-based loadConfig that doesn't work on serverless)
+  const config: Record<string, string> = { baseUrl, apiKey };
+  if (token) config.token = token;
+  if (userId) config.userId = userId;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  zaiInstance = new (ZAI as any)(config);
   return zaiInstance;
 }
 
@@ -344,6 +376,7 @@ export async function generateMarketingContent(
   options: GenerateOptions = {},
 ): Promise<GeneratedContent> {
   const zai = await getZAI();
+  if (!zai) throw new Error('Z.AI SDK not available');
 
   // ── Resolve variation ──
   const seed = options.variationSeed ?? Math.floor(Math.random() * 1_000_000);
