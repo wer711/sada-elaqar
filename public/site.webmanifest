@@ -1,0 +1,34 @@
+{
+  "name": "صدى العقار — مساعد التسويق العقاري",
+  "short_name": "صدى العقار",
+  "description": "حوّل بيانات أي عقار إلى محتوى تسويقي احترافي في ثوانٍ معدودة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF8F2",
+  "theme_color": "#0D7C66",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/favicon-32.png",
+      "type": "image/png",
+      "sizes": "32x32"
+    },
+    {
+      "src": "/favicon-16.png",
+      "type": "image/png",
+      "sizes": "16x16"
+    },
+    {
+      "src": "/apple-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "180x180",
+      "purpose": "apple touch icon"
+    }
+  ]
+}

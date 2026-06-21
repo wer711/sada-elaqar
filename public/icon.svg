@@ -1,0 +1,26 @@
+<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: rounded square with brand emerald gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D7C66"/>
+      <stop offset="1" stop-color="#0a6b58"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#bg)"/>
+
+  <!-- Stylized building (simplified, bold, recognizable at 16x16) -->
+  <rect x="8" y="10" width="16" height="16" rx="1.5" fill="#FBF8F2"/>
+
+  <!-- Two windows (top row) — bigger for visibility at small sizes -->
+  <rect x="11" y="13" width="3.5" height="3.5" rx="0.4" fill="#0D7C66"/>
+  <rect x="17.5" y="13" width="3.5" height="3.5" rx="0.4" fill="#0D7C66"/>
+
+  <!-- One window (bottom row) -->
+  <rect x="11" y="19" width="3.5" height="3.5" rx="0.4" fill="#0D7C66"/>
+
+  <!-- Door (gold accent) -->
+  <rect x="17.5" y="19" width="3.5" height="7" rx="0.6" fill="#D4A853"/>
+
+  <!-- Echo wave (single, bold — the "Sada"/echo concept) -->
+  <path d="M26.5 8 C28 9.5, 28 12, 26.5 13.5" stroke="#D4A853" stroke-width="2" stroke-linecap="round" fill="none"/>
+</svg>

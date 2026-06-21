@@ -1,0 +1,90 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies — regenerated via `npm install` / `bun install`
+node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js build output — regenerated via `npm run build`
+/.next/
+/out/
+
+# production build
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (keep .env.example tracked, ignore real secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+local-*
+.claude
+.z-ai-config
+*.log
+dev.log
+dev.out.log
+server.log
+test
+prompt
+
+# ─── Z.ai Code environment (NOT part of the user's project) ───
+# Skills system — internal to Z.ai, heavy (60MB+), not needed for deployment
+/skills/
+
+# Upload staging — temporary files the user uploads for analysis
+/upload/
+
+# Tool results cache — my own working files
+/tool-results/
+
+# Agent context / planning docs
+/agent-ctx/
+
+# Test screenshots (development artifacts)
+/test-screenshots/
+
+# Example demos (not part of the deployed app)
+/examples/
+
+# Mini services (not used in this project)
+/mini-services/
+
+# Download staging (deploy archives — not needed in repo)
+/download/
+
+# Z.ai scripts
+/.zscripts/
+
+# SQLite database — regenerated on first `db:push`, don't ship PII
+/db/*.db
+/db/*.db-journal
+/db/*.db-wal
+/db/*.db-shm
+
+# bun.lock — let Vercel use npm instead
+bun.lock

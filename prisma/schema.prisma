@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id            String   @id @default(cuid())
+  name          String
+  whatsapp      String
+  email         String?
+  city          String
+  country       String?
+  role          String
+  challenges    String
+  topFeature    String
+  monthlyBudget String?
+  source        String   @default("landing")
+  status        String   @default("new")
+  notes         String?
+  /// Visitor consent: required to submit the form (PDPL/DPL compliance)
+  consent       Boolean  @default(false)
+  /// When the visitor gave consent (legal evidence)
+  consentAt     DateTime?
+  /// Anonymous visitor ID (from localStorage). Links the Lead to all their
+  /// DemoSessions + StyleProfile — so the sales team can see which properties,
+  /// platforms, and styles the lead actually engaged with before registering.
+  visitorId     String?
+  /// Summary of the visitor's demo behavior at the moment of registration.
+  /// JSON string: { sessions, propertyTypes[], platforms[], lastSessionAt }
+  demoBehavior  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([visitorId])
+  @@index([whatsapp])
+}
+
+model DemoSession {
+  id              String   @id @default(cuid())
+  visitorId       String?
+  propertyType    String
+  city            String
+  country         String?
+  area            String?
+  rooms           String?
+  price           String?
+  features        String?
+  style           String?
+  platform        String?
+  customArea      String?
+  rating          String?
+  /// The style angle / personality used for this generation (for variation tracking)
+  variationAngle  String?
+  /// Random seed used for this generation so we can reproduce / avoid repeats
+  variationSeed   Int?
+  /// JSON string of the property data AS WRITTEN in the generated content
+  /// (so the displayed property card always matches the marketing copy)
+  resolvedProperty String?
+  leadConverted   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([createdAt])
+}
+
+/// Per-visitor learned style profile (anonymous, evolves with each interaction).
+/// This is the "background training" memory — it lets the assistant write more
+/// professional, varied, and personalized content every time, and ensures no two
+/// visitors get identical outputs (which would expose the assistant as templated).
+model StyleProfile {
+  id              String   @id @default(cuid())
+  visitorId       String   @unique
+  /// How many generations this visitor has run
+  generationCount Int      @default(0)
+  /// How many upvotes (content the visitor liked)
+  upvoteCount     Int      @default(0)
+  /// How many downvotes (content the visitor disliked)
+  downvoteCount   Int      @default(0)
+  /// Preferred style angles the visitor tends to like (JSON array of angle keys)
+  preferredAngles String?
+  /// Preferred property types this visitor markets (JSON array)
+  preferredTypes  String?
+  /// Preferred platforms (JSON array)
+  preferredPlatforms String?
+  /// Words/phrases the visitor consistently liked (JSON array, capped)
+  likedVocab      String?
+  /// Style angles to AVOID for this visitor (learned from downvotes, JSON array)
+  avoidedAngles   String?
+  /// Last variation seed used (to avoid repeating the same angle back-to-back)
+  lastAngle       String?
+  lastSeed        Int?
+  /// Trust score 0..100 — grows with usage + upvotes, unlocks "smarter" prompting
+  trustScore      Int      @default(10)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// Founder (early-supporter) subscriptions.
+/// Each row = one payment. The visitorId links to their DemoSessions + Lead.
+/// Gumroad sends a webhook after successful payment; we record it here.
+model Subscription {
+  id              String   @id @default(cuid())
+  /// Anonymous visitor ID (links to DemoSessions + StyleProfile)
+  visitorId       String?
+  /// Lead ID if the visitor also registered (nullable — they might subscribe first)
+  leadId          String?
+  /// Plan: 'founder' (early supporter) — more plans later
+  plan            String   @default("founder")
+  /// 'active' | 'cancelled' | 'refunded'
+  status          String   @default("active")
+  /// 'gumroad' (PayPal/stripe via Gumroad) — more providers later
+  paymentProvider String   @default("gumroad")
+  /// Gumroad's subscription/purchase ID (for reconciliation + refund lookups)
+  providerSubscriptionId String?
+  /// Gumroad's transaction ID for THIS payment
+  providerPaymentId      String?
+  /// Amount paid (in smallest currency unit to avoid float issues) — e.g. 29 = $29
+  amount          Float
+  /// 'USD' | 'SAR' | 'AED' | ...
+  currency        String  @default("USD")
+  /// Sequential founder number (1, 2, 3...) — the "first 100 founders" badge
+  founderNumber   Int?
+  /// When the payment was confirmed
+  startedAt       DateTime @default(now())
+  /// When cancelled (if applicable)
+  cancelledAt     DateTime?
+  /// Raw Gumroad webhook payload (for audit + dispute resolution)
+  rawPayload      String?
+  createdAt       DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([leadId])
+  @@index([status])
+}
+
+/// Feedback from visitors (both free + founders).
+/// Founders' feedback gets priority:true automatically.
+model Feedback {
+  id              String   @id @default(cuid())
+  visitorId       String?
+  leadId          String?
+  /// 1-5 stars
+  rating          Int
+  /// 'feature_request' | 'demo_improvement' | 'bug' | 'pricing_suggestion' | 'general'
+  category        String   @default("general")
+  /// The feedback text
+  feedback        String
+  /// Is this from a paying founder? (auto-set based on visitorId lookup)
+  isPaid          Boolean  @default(false)
+  /// Founders' feedback gets priority flag (shown in the CRM sheet first)
+  priority        Boolean  @default(false)
+  /// Did they consent to be contacted about this feedback?
+  contactConsent  Boolean  @default(false)
+  /// 'landing' (where the feedback was submitted)
+  source          String   @default("landing")
+  createdAt       DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([isPaid])
+  @@index([createdAt])
+}
