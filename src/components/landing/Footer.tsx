@@ -3,8 +3,8 @@
 import { MessageCircle, Mail } from 'lucide-react'
 import { triggerPrivacyTermsDialog } from './PrivacyTermsDialog'
 
-// Public-facing WhatsApp number (Gulf-facing brand presence).
-const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '966500000000'
+// WhatsApp number — hardcoded to the real operational number.
+const WA_NUMBER = '213696212465'
 
 function XIcon({ className }: { className?: string }) {
   return (
