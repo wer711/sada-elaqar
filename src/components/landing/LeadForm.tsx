@@ -249,7 +249,7 @@ export default function LeadForm() {
     setSelectedCountry(null);
   };
 
-  const spotsLeft = Math.max(0, 100 - leadCount);
+  const spotsLeft = Math.max(0, 50 - leadCount);
 
   /* ─── Success State — smart thank-you screen with founder offer ─── */
   if (isSuccess) {
@@ -376,7 +376,7 @@ export default function LeadForm() {
           </Badge>
 
           <h2 className="text-2xl md:text-4xl font-bold text-[#211F1A] leading-tight mb-4">
-            {`كن من أول ١٠٠ وكيل يحصل على `}
+            {`كن من أول ٥٠ وكيل يحصل على `}
             <span className="grad-text">وصول مبكر مجاناً</span>
           </h2>
 
