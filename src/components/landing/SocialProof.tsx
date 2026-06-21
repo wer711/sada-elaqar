@@ -4,10 +4,10 @@ import { useEffect, useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Crown, Star, Rocket, TrendingUp, Users, Quote, CheckCircle2 } from 'lucide-react'
 
-const MAX_EARLY = 100
+const MAX_EARLY = 50
 // العدّاد يُعرض فقط بعد تجاوز عتبة "الرواد المميزون" (34).
 // قبل ذلك، الرقم المنخفض محبط ويضر بالثقة أكثر مما ينفعها.
-const COUNT_DISPLAY_THRESHOLD = 34
+const COUNT_DISPLAY_THRESHOLD = 17
 
 interface Phase {
   id: number
@@ -25,7 +25,7 @@ const phases: Phase[] = [
   {
     id: 1,
     label: 'المؤسسون الأوائل',
-    range: [0, 33],
+    range: [0, 17],
     icon: <Crown className="h-4 w-4" />,
     color: 'text-[#0D7C66]',
     bgColor: 'bg-[#0D7C66]/10',
@@ -36,7 +36,7 @@ const phases: Phase[] = [
   {
     id: 2,
     label: 'الرواد المميزون',
-    range: [34, 66],
+    range: [18, 34],
     icon: <Star className="h-4 w-4" />,
     color: 'text-[#D4A853]',
     bgColor: 'bg-[#D4A853]/10',
@@ -47,7 +47,7 @@ const phases: Phase[] = [
   {
     id: 3,
     label: 'الاستعداد للإطلاق',
-    range: [67, 100],
+    range: [35, 50],
     icon: <Rocket className="h-4 w-4" />,
     color: 'text-[#E0793C]',
     bgColor: 'bg-[#E0793C]/10',
@@ -189,7 +189,7 @@ export default function SocialProof() {
                       </span>{' '}
                       مسوّق عقاري انضمّوا لقائمة الوصول المبكر — باقي{' '}
                       <span className="text-[#D4A853] font-black">{remaining}</span>{' '}
-                      مكاناً من أول ١٠٠
+                      مكاناً من أول ٥٠
                     </p>
                   )}
                 </div>
