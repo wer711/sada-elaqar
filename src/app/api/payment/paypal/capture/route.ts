@@ -20,7 +20,7 @@ import { db } from '@/lib/db';
  */
 
 const FOUNDER_PLAN_PRICE = 29;
-const FOUNDER_PLAN_TARGET = 100;
+const FOUNDER_PLAN_TARGET = 50;
 
 async function getPayPalAccessToken(): Promise<string> {
   const clientId = process.env.PAYPAL_CLIENT_ID;
