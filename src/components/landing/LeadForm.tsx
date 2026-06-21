@@ -109,8 +109,7 @@ export default function LeadForm() {
   const [demoSessionsCount, setDemoSessionsCount] = useState(0);
   const [selectedCountry, setSelectedCountry] = useState<CountryInfo | null>(null);
   const [leadCount, setLeadCount] = useState<number>(0);
-  // Two-step form state
-  const [step, setStep] = useState<1 | 2>(1);
+  // Single-step form (simplified from 2 steps for higher conversion)
 
   // visitorId — links the lead to their anonymous demo behavior
   const visitorId = useVisitorId();
@@ -171,23 +170,6 @@ export default function LeadForm() {
     }
   }, [countryValue, setValue]);
 
-  // Step 1 validation: name + whatsapp + country + city + consent
-  const step1Valid = !!(nameValue && whatsappValue && countryValue && cityValue && consentValue);
-
-  const goToStep2 = async () => {
-    // Validate step 1 fields before moving on
-    const valid = await trigger(['name', 'whatsapp', 'country', 'city', 'consent']);
-    if (!valid) return;
-    setStep(2);
-    // Smooth scroll to top of form
-    document.getElementById('lead-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const goToStep1 = () => {
-    setStep(1);
-    document.getElementById('lead-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   const onSubmit = async (data: LeadFormData) => {
     setIsSubmitting(true);
     try {
@@ -244,7 +226,6 @@ export default function LeadForm() {
   const handleReset = () => {
     setIsSuccess(false);
     setDuplicateLead(false);
-    setStep(1);
     reset();
     setSelectedCountry(null);
   };
@@ -403,28 +384,6 @@ export default function LeadForm() {
         >
           <Card className="border border-[#E8E1D2] shadow-lg overflow-hidden">
             <CardContent className="p-6 md:p-8">
-              {/* Step indicator */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                    step >= 1 ? 'bg-[#0D7C66] text-white' : 'bg-[#E8E1D2] text-[#5B564C]'
-                  }`}>١</div>
-                  <span className={`text-xs font-bold ${step === 1 ? 'text-[#0D7C66]' : 'text-[#5B564C]'}`}>
-                    بيانات التواصل
-                  </span>
-                  <div className={`w-8 h-px ${step >= 2 ? 'bg-[#0D7C66]' : 'bg-[#E8E1D2]'}`} />
-                  <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
-                    step >= 2 ? 'bg-[#0D7C66] text-white' : 'bg-[#E8E1D2] text-[#5B564C]'
-                  }`}>٢</div>
-                  <span className={`text-xs font-bold ${step === 2 ? 'text-[#0D7C66]' : 'text-[#5B564C]'}`}>
-                    تفاصيل اختيارية
-                  </span>
-                </div>
-                <span className="text-[10px] text-[#5B564C]/70 font-medium">
-                  {step === 1 ? 'خطوة ١ من ٢' : 'خطوة ٢ من ٢'}
-                </span>
-              </div>
-
               {/* Notice Box */}
               <div className="bg-[#0D7C66]/8 border border-[#0D7C66]/15 rounded-lg p-4 mb-6 flex gap-3 items-start">
                 <span className="text-xl mt-0.5 shrink-0">🏗️</span>
@@ -435,17 +394,7 @@ export default function LeadForm() {
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-                <AnimatePresence mode="wait">
-                  {step === 1 ? (
-                    /* ─── STEP 1: Soft commitment (name + whatsapp + country + city + consent) ─── */
-                    <motion.div
-                      key="step1"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-5"
-                    >
+                {/* ─── Single step: all fields, required ones first, optional collapsible ─── */}
                       {/* 1. الاسم الكامل */}
                       <div className="space-y-2">
                         <Label htmlFor="name" className="text-[#211F1A] font-semibold text-sm">
@@ -619,31 +568,12 @@ export default function LeadForm() {
                         )}
                       </div>
 
-                      {/* Next button */}
-                      <Button
-                        type="button"
-                        onClick={goToStep2}
-                        disabled={!step1Valid}
-                        className="w-full h-12 bg-[#0D7C66] hover:bg-[#0B6B58] text-white font-bold text-base rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        التالي
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                      </Button>
-
-                      <p className="text-center text-[#5B564C] text-xs">
-                        💡 الخطوة التالية اختيارية — تساعدنا على تخصيص الميزات لك
-                      </p>
-                    </motion.div>
-                  ) : (
-                    /* ─── STEP 2: Optional details (role + challenges + topFeature + budget) ─── */
-                    <motion.div
-                      key="step2"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-5"
-                    >
+                      {/* ─── Optional details (collapsible — all in one step) ─── */}
+                      <details className="rounded-xl border border-[#E8E1D2] bg-[#FBF8F2]/50 p-3">
+                        <summary className="cursor-pointer text-sm font-bold text-[#0D7C66] flex items-center gap-2">
+                          💡 تفاصيل إضافية (اختياري — تساعدنا على تخصيص الميزات لك)
+                        </summary>
+                        <div className="space-y-5 mt-4">
                       {/* 5. صفتك */}
                       <div className="space-y-3">
                         <Label className="text-[#211F1A] font-semibold text-sm">
@@ -798,35 +728,24 @@ export default function LeadForm() {
                         />
                       </div>
 
-                      {/* Navigation buttons */}
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          onClick={goToStep1}
-                          variant="outline"
-                          className="border-[#E8E1D2] text-[#5B564C] hover:bg-[#F5F0E8] font-semibold h-12 px-6 cursor-pointer"
-                        >
-                          <ChevronRight className="h-4 w-4 ml-1" />
-                          السابق
-                        </Button>
-                        <Button
-                          type="submit"
-                          disabled={isSubmitting}
-                          className="flex-1 h-12 bg-[#0D7C66] hover:bg-[#0B6B58] text-white font-bold text-base rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                          {isSubmitting ? (
-                            <span className="flex items-center gap-2">
-                              <Loader2 className="animate-spin size-5" />
-                              جارٍ الإرسال...
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1.5">
-                              <Sparkles className="h-4 w-4" />
-                              🚀 سجّل واحصل على وصول مبكر
-                            </span>
-                          )}
-                        </Button>
-                      </div>
+                      {/* Submit button */}
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full h-12 bg-[#0D7C66] hover:bg-[#0B6B58] text-white font-bold text-base rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                      >
+                        {isSubmitting ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="animate-spin size-5" />
+                            جارٍ الإرسال...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5">
+                            <Sparkles className="h-4 w-4" />
+                            🚀 سجّل واحصل على وصول مبكر
+                          </span>
+                        )}
+                      </Button>
 
                       <p className="text-center text-[#5B564C] text-xs">
                         🔒 بياناتك محفوظة بأمان. اطّلع على{' '}
@@ -838,9 +757,8 @@ export default function LeadForm() {
                           سياسة الخصوصية
                         </button>
                       </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        </div>
+                      </details>
               </form>
             </CardContent>
           </Card>
