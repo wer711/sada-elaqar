@@ -72,10 +72,14 @@ export default function FounderPlan() {
     return () => clearInterval(interval);
   }, []);
 
-  // Load PayPal client ID from env (NEXT_PUBLIC_ so it's available client-side)
+  // Load PayPal client ID — hardcoded fallback for Vercel (NEXT_PUBLIC env var
+  // not working in dashboard). PayPal Client ID is SAFE to expose publicly.
   useEffect(() => {
-    const id = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-    if (id) setPaypalClientId(id);
+    const raf = requestAnimationFrame(() => {
+      const id = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'AfViq4cktwMOcmlCkccx_XoBsrseASA0Z_di5s2NCDzYPa2fv8syBhRV6MS9gIeLnPphIjD_XTEkk4-l';
+      setPaypalClientId(id);
+    });
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   const remaining = founderCount !== null ? Math.max(0, FOUNDER_TARGET - founderCount) : FOUNDER_TARGET;
@@ -299,7 +303,7 @@ export default function FounderPlan() {
             <div className="mb-5">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-black">${FOUNDER_PRICE}</span>
-                <span className="text-sm text-white/70 line-through">$49</span>
+                <span className="text-sm text-white/70 line-through">$249</span>
               </div>
               <p className="text-xs text-white/70 mt-1">دفعة واحدة · بدون اشتراك متكرر</p>
             </div>
