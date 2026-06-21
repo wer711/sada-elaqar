@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Check, Loader2, Users, Sparkles, Zap, ShieldCheck, PartyPopper } from 'lucide-react';
+import { Crown, Check, Loader2, Users, Sparkles, Zap, ShieldCheck, PartyPopper, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { Button } from '@/components/ui/button';
@@ -22,16 +22,16 @@ import { useVisitorId } from '@/lib/visitor';
  */
 
 const FOUNDER_PRICE = 29; // USD
-const FOUNDER_TARGET = 100;
-// العدّاد يُعرض فقط بعد تخطي 40 داعم. قبل ذلك، الرقم المنخفض محبط ويعطي
-// انطباعاً بأن المشروع لم يجد دعماً. نُظهر بدلاً منه رسالة "كن من الأوائل".
-const COUNT_DISPLAY_THRESHOLD = 40;
+const FOUNDER_TARGET = 50; // Limited to 50 for urgency (was 100)
+// Counter shown only after crossing 20 founders (40% of 50).
+// Below that, a low number looks depressing. We show "كن من الأوائل" instead.
+const COUNT_DISPLAY_THRESHOLD = 20;
 
 const FOUNDER_PERKS = [
   'كتابة محتوى غير محدودة حتى إطلاق المشروع النهائي',
   'شارة «داعم مبكر» مميزة في حسابك',
   'أولوية في كل الميزات الجديدة قبل الجميع',
-  'سعر خاص مدى الحياة (أقل من سعر الإطلاق)',
+  'سعر مدى الحياة — ثابت ولن يتغير عند الإطلاق',
   'ملاحظاتك تُعرض مباشرة على خارطة الطريق (أولوية قصوى)',
   'تصويت على الميزات القادمة — رأيك يُحدّد الأولويات',
 ];
@@ -173,15 +173,15 @@ export default function FounderPlan() {
           <div className="inline-flex items-center gap-2 mb-3">
             <Crown className="w-5 h-5 text-[#D4A853]" />
             <span className="text-sm font-semibold tracking-wide text-[#D4A853]">
-              عرض الداعم المبكر
+              عرض الداعم المبكر — لأول ٥٠ شريكاً فقط
             </span>
           </div>
           <h2 className="text-2xl md:text-4xl font-bold text-[#211F1A] mb-3">
-            كن من أوائل الداعمين — وابنِ المشروع معنا
+            استثمر $٢٩ اليوم، وكن شريكاً مؤسساً في مستقبل التسويق العقاري
           </h2>
           <p className="text-[#5B564C] text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-            دفعة رمزية واحدة تُمكّنك من استخداماً غير محدود حتى الإطلاق،
-            وتضعك في النخبة الأولى التي تبني منصة التسويق العقاري العربي.
+            لست مجرد مشترك — أنت شريك في بناء المقرّ الرقمي الأول لمسوّقي العقار
+            في الوطن العربي. دفعة رمزية واحدة تضمن لك مكاناً في النخبة المؤسِّسة.
           </p>
         </motion.div>
 
@@ -422,14 +422,15 @@ export default function FounderPlan() {
           </motion.div>
         </div>
 
-        {/* Vision note — rephrased to focus on the vision, not operational costs */}
+        {/* Vision note + value comparison + guarantee */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="max-w-2xl mx-auto mt-8"
+          className="max-w-2xl mx-auto mt-8 space-y-4"
         >
+          {/* Why $29 — partnership framing */}
           <div className="rounded-xl bg-gradient-to-l from-[#0D7C66]/8 to-[#D4A853]/8 border border-[#0D7C66]/15 p-5 flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-[#0D7C66] shrink-0 mt-0.5" />
             <div>
@@ -439,12 +440,35 @@ export default function FounderPlan() {
               <p className="text-xs md:text-sm text-[#5B564C] leading-relaxed">
                 نحن نبني المقرّ الرقمي الأول لمسوّقي العقار في الوطن العربي —
                 منصة متكاملة تجمع بين الذكاء والاحترافية لخدمة سوق عقاري ضخم
-                ومتنامٍ. هذا المشروع طموح ويحتاج إلى دعم النخبة الأولى من
-                المؤمنين به. مبلغك اليوم ليس مجرد اشتراك، بل شراكة في بناء
-                شيء كبير — ومقابل ذلك تحصل على مزايا حصرية مدى الحياة بسعر
-                لن يتكرر عند الإطلاق.
+                ومتنامٍ. مبلغك اليوم ليس مجرد اشتراك، بل <strong>شراكة في بناء
+                شيء كبير</strong> — ومقابل ذلك تحصل على مزايا حصرية مدى الحياة
+                بسعر <strong>أقل بكثير</strong> من سعر الإطلاق الرسمي.
               </p>
             </div>
+          </div>
+
+          {/* ROI framing — value-based pricing */}
+          <div className="rounded-xl bg-[#FBF8F2] border border-[#E8E1D2] p-4 flex items-start gap-3">
+            <TrendingUp className="w-5 h-5 text-[#D4A853] shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-[#211F1A] mb-1">
+                القيمة التي توفرها
+              </p>
+              <p className="text-xs text-[#5B564C] leading-relaxed">
+                وكيل عقاري يقضي <strong>ساعة في كتابة وصف عقار واحد</strong>.
+                مع صدى العقار: <strong>٧ ثوانٍ</strong>. وفّر ٥٣ ساعة شهرياً =
+                <strong className="text-[#0D7C66]"> توفير يفوق $٢٩ آلاف مرة</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* 7-day refund guarantee */}
+          <div className="rounded-xl bg-[#0D7C66]/5 border border-[#0D7C66]/20 p-4 flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-[#0D7C66] shrink-0" />
+            <p className="text-xs md:text-sm text-[#0D7C66] font-bold">
+              ضمان استرداد كامل خلال ٧ أيام — بدون أسئلة.
+              <span className="font-normal text-[#5B564C]"> جرّب بلا مخاطرة، فإن لم تقتنع بالقيمة، نعيد لك كل مبلغك.</span>
+            </p>
           </div>
         </motion.div>
       </div>
