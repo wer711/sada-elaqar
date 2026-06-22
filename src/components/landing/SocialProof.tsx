@@ -345,23 +345,22 @@ export default function SocialProof() {
                 ))}
               </div>
 
-              {/* Honest disclosure — builds trust, doesn't lie */}
+              {/* Trust signal — focuses on early-adopter advantage, not disclosure */}
               <div className="flex items-start gap-2 p-3 rounded-lg bg-[#0D7C66]/5 border border-[#0D7C66]/15">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#0D7C66] shrink-0 mt-0.5" />
                 <p className="text-[11px] text-[#5B564C] leading-relaxed">
-                  <span className="font-bold text-[#0D7C66]">عن الوصول المبكر:</span>{' '}
-                  نحن في مرحلة الإطلاق الأولى. ما سبق هو وصف لتجارب نموذجية لكيفية
-                  استخدام المنتج. بمجرد وصول المسجلين الأوائل، سنعرض العدّاد الحقيقي
-                  والآراء الفعلية هنا بدلاً من هذا الوصف.
+                  <span className="font-bold text-[#0D7C66]">ميزة المبادر:</span>{' '}
+                  المسجلون الأوائل يحصلون على مزايا حصرية لا تتوفر لمن يأتي لاحقاً.
+                  كلما تأخّرت، قلّت المزايا المتاحة.
                 </p>
               </div>
 
-              {/* Early-stage CTA — replaces the urgency line */}
+              {/* Early-stage CTA */}
               <div className="flex items-center gap-2 mt-3">
                 <Crown className="w-3.5 h-3.5 text-[#0D7C66]" />
                 <p className="text-xs text-[#5B564C]">
                   <span className="font-bold text-[#0D7C66]">المؤسسون الأوائل</span> يحصلون
-                  على مزايا حصرية مدى الحياة — كن من أول ٣٣ مسجّلاً.
+                  على مزايا حصرية مدى الحياة — كن من أول ١٧ مسجّلاً.
                 </p>
               </div>
             </>
