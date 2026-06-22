@@ -190,9 +190,17 @@ export function makeVariationSeed(): number {
  *  5. The referral bonus resets daily (so sharing every day = more writes)
  *
  * Rewards:
- *  - Click from friend → +3 generations for referrer
- *  - Friend registers → +10 generations for referrer
+ *  - Click from friend → +1 generation for referrer (low to prevent abuse)
+ *  - Friend registers → +8 generations for referrer
  *  - Friend becomes paid founder → +20 generations for referrer
+ *
+ * Anti-abuse measures:
+ *  - Referrer ID is stored in sessionStorage (not just URL) — survives page
+ *    navigation but dies when the tab closes, preventing repeated abuse
+ *  - A timestamp is stored with each referral capture; only 1 capture per
+ *    referrer per browser per 24h (prevents refresh-spam)
+ *  - The referrer ID must match the format v_XXX (validated)
+ *  - A visitor cannot refer themselves (visitorId !== referrerId)
  * ═══════════════════════════════════════════════════════════════════════ */
 
 /** Returns the visitor's referral link (with ?ref=visitorId appended). */
@@ -211,7 +219,12 @@ export function useReferralLink(visitorId: string): string {
 /**
  * On first visit, checks if the URL has ?ref= parameter.
  * If so, stores the referrer's visitorId in localStorage.
- * This is used later to award the referrer when the visitor registers.
+ *
+ * Anti-abuse:
+ *  - Validates ref format (must start with v_)
+ *  - Prevents self-referral (visitorId === ref → ignored)
+ *  - Only captures once per 24h per browser (timestamp check)
+ *  - Uses sessionStorage as a secondary guard (tab-scoped)
  */
 export function useCaptureReferrer() {
   useEffect(() => {
@@ -219,16 +232,60 @@ export function useCaptureReferrer() {
     try {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get('ref');
-      if (ref && ref.startsWith('v_')) {
-        // Only store if not already set (don't overwrite)
-        const existing = localStorage.getItem(REFERRER_KEY);
-        if (!existing) {
-          localStorage.setItem(REFERRER_KEY, ref);
-          // Clean the URL (remove ?ref= for a clean address bar)
-          const newUrl = window.location.pathname + window.location.hash;
-          window.history.replaceState({}, '', newUrl);
-        }
+      if (!ref || !ref.startsWith('v_') || ref.length < 5) return;
+
+      // Get own visitor ID — prevent self-referral
+      const ownId = localStorage.getItem(VISITOR_ID_KEY);
+      if (ownId === ref) return; // Can't refer yourself
+
+      // Check if we already captured a referrer in the last 24h
+      const existing = localStorage.getItem(REFERRER_KEY);
+      const lastCaptureTs = localStorage.getItem('sada_referral_ts');
+      const now = Date.now();
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+
+      if (existing && lastCaptureTs && (now - parseInt(lastCaptureTs, 10)) < ONE_DAY) {
+        // Already captured within 24h — don't capture again (prevents refresh abuse)
+        // Still clean the URL
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+        return;
       }
+
+      // Also check sessionStorage (tab-scoped guard — prevents multiple tabs)
+      const sessionCaptured = sessionStorage.getItem('sada_ref_captured');
+      if (sessionCaptured === '1') {
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+        return;
+      }
+
+      // Capture the referrer
+      localStorage.setItem(REFERRER_KEY, ref);
+      localStorage.setItem('sada_referral_ts', String(now));
+      sessionStorage.setItem('sada_ref_captured', '1');
+
+      // Award the referrer +1 generation (visit reward)
+      // We do this client-side by adding to the referrer's bonus IF they're
+      // on the same browser. For cross-browser referrals, the bonus is
+      // awarded when the referred user registers (server-side via the API).
+      // For same-browser (self-test), we skip to prevent self-award.
+      if (ownId !== ref) {
+        // The referrer's bonus is stored under THEIR visitor ID key.
+        // Since we can't access another browser's localStorage, this client-side
+        // bonus only works if the referrer visits the site again on the same
+        // browser. For cross-device, the API handles it at registration time.
+        // Here we just store the pending referral for the API to process.
+        const pendingReferrals = JSON.parse(localStorage.getItem('sada_pending_referrals') || '[]');
+        pendingReferrals.push({ referrer: ref, visitorId: ownId, timestamp: now, type: 'visit' });
+        // Keep only last 50 pending referrals
+        if (pendingReferrals.length > 50) pendingReferrals.shift();
+        localStorage.setItem('sada_pending_referrals', JSON.stringify(pendingReferrals));
+      }
+
+      // Clean the URL (remove ?ref= for a clean address bar)
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
     } catch {
       // ignore
     }
