@@ -14,6 +14,7 @@ import SocialProof from '@/components/landing/SocialProof'
 import Footer from '@/components/landing/Footer'
 import WhatsAppWidget from '@/components/landing/WhatsAppWidget'
 import { PrivacyTermsMount } from '@/components/landing/PrivacyTermsDialog'
+import { ReferralMount } from '@/components/landing/ReferralMount'
 
 export default function Home() {
   return (
@@ -36,6 +37,7 @@ export default function Home() {
       <Footer />
       <WhatsAppWidget />
       <PrivacyTermsMount />
+      <ReferralMount />
     </div>
   )
 }
