@@ -84,8 +84,8 @@ export default function ReferralWidget({ showAfterGeneration = false }: Referral
               احصل على محاولات إضافية مجاناً
             </p>
             <p className="text-xs text-[#5B564C] mt-0.5 leading-relaxed">
-              شارك رابطك مع أصدقائك — كل صديق يزور الموقع يمنحك <strong className="text-[#0D7C66]">+٣ محاولات</strong>،
-              وإذا سجّل تحصل على <strong className="text-[#0D7C66]">+١٠ محاولات</strong> إضافية!
+              شارك رابطك مع أصدقائك — كل صديق يزور الموقع يمنحك <strong className="text-[#0D7C66]">محاولة إضافية</strong>،
+              وإذا سجّل تحصل على <strong className="text-[#0D7C66]">+٨ محاولات</strong>، وإذا اشترك <strong className="text-[#0D7C66]">+٢٠ محاولة</strong>!
             </p>
           </div>
         </div>
@@ -130,12 +130,12 @@ export default function ReferralWidget({ showAfterGeneration = false }: Referral
         <div className="flex items-center justify-around mt-3 pt-3 border-t border-[#E8E1D2]/50">
           <div className="text-center">
             <p className="text-[10px] text-[#5B564C]">صديق يزور</p>
-            <p className="text-sm font-black text-[#0D7C66]">+٣</p>
+            <p className="text-sm font-black text-[#0D7C66]">+١</p>
           </div>
           <div className="w-px h-8 bg-[#E8E1D2]" />
           <div className="text-center">
             <p className="text-[10px] text-[#5B564C]">صديق يسجّل</p>
-            <p className="text-sm font-black text-[#D4A853]">+١٠</p>
+            <p className="text-sm font-black text-[#D4A853]">+٨</p>
           </div>
           <div className="w-px h-8 bg-[#E8E1D2]" />
           <div className="text-center">
