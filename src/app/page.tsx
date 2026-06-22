@@ -26,6 +26,7 @@ export default function Home() {
         <HowItWorks />
         <DailyTip />
         <InteractiveDemo />
+        <ReferralMount />
         <Features />
         <TargetAudience />
         <FAQ />
@@ -37,7 +38,6 @@ export default function Home() {
       <Footer />
       <WhatsAppWidget />
       <PrivacyTermsMount />
-      <ReferralMount />
     </div>
   )
 }
