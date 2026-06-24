@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -72,6 +73,24 @@ export default function RootLayout({
       >
         {children}
         <Toaster richColors position="top-center" dir="rtl" />
+
+        {/* ====== سكربت تتبع صدى العقار — يبدأ هنا ====== */}
+        <Script id="sada-config" strategy="beforeInteractive">
+          {`
+            window.sadaConfig = {
+              endpoint: 'https://dashboard-iota-nine-75.vercel.app/api/track',
+              debug: false,
+              autoPageviews: true,
+              autoClicks: true,
+            };
+          `}
+        </Script>
+        <Script
+          src="https://dashboard-iota-nine-75.vercel.app/track.js"
+          strategy="afterInteractive"
+          async
+        />
+        {/* ====== نهاية سكربت التتبع ====== */}
       </body>
     </html>
   );
