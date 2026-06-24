@@ -117,7 +117,7 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden md:block">
-          <a href="#lead-form">
+          <a href="#lead-form" data-sada-track="cta-signup" data-sada-category="conversion">
             <Button className="rounded-full bg-[#0D7C66] px-6 text-white hover:bg-[#0a6b58] cursor-pointer">
               سجّل الآن
             </Button>
