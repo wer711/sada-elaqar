@@ -115,7 +115,7 @@ export default function Hero() {
             custom={3}
             className="mt-8 flex flex-col gap-4 sm:flex-row"
           >
-            <a href="#demo">
+            <a href="#demo" data-sada-track="try-now-click" data-sada-category="engagement">
               <Button className="pulse-cta h-12 rounded-full bg-[#0D7C66] px-8 text-base font-bold text-white hover:bg-[#0a6b58] cursor-pointer">
                 جرّب الآن مجاناً
               </Button>
