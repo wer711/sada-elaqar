@@ -36,10 +36,18 @@ export default function ReferralWidget({ showAfterGeneration = false }: Referral
       await navigator.clipboard.writeText(referralLink);
       setCopied(true);
       toast.success('تم نسخ رابطك!', {
-        description: 'شاركه مع أصدقائك — كل صديق يزور الموقع = +٣ محاولات لك',
+        description: 'شاركه مع أصدقائك — كل صديق يزور الموقع = محاولة إضافية لك',
         duration: 4000,
       });
       setTimeout(() => setCopied(false), 2000);
+
+      // ✅ تتبع نسخ رابط الإحالة في لوحة التحكم
+      if (typeof window !== 'undefined' && window.sada) {
+        window.sada.track('referral', {
+          label: 'نسخ رابط إحالة',
+          category: 'conversion',
+        });
+      }
     } catch {
       // Fallback
       const ta = document.createElement('textarea');
@@ -60,6 +68,14 @@ export default function ReferralWidget({ showAfterGeneration = false }: Referral
       `🚀 اكتشفت صدى العقار — أداة تكتب محتوى تسويقي عقاري احترافي في ثوانٍ!\n\nجرّبها مجاناً: ${referralLink}`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank');
+
+    // ✅ تتبع مشاركة الإحالة في لوحة التحكم
+    if (typeof window !== 'undefined' && window.sada) {
+      window.sada.track('referral', {
+        label: 'مشاركة رابط إحالة - واتساب',
+        category: 'conversion',
+      });
+    }
   }, [referralLink]);
 
   // Don't render if no link yet (still loading) or not needed
