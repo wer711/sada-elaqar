@@ -68,7 +68,7 @@ export default function FeedbackSection({ isFounder = false }: FeedbackSectionPr
 
       // ✅ تتبع حفظ الملاحظات في لوحة التحكم
       if (typeof window !== 'undefined' && window.sada) {
-        window.sada.track('note', {
+        (window.__sadaSafeTrack || (() => {}))('note', {
           label: 'حفظ ملاحظة',
           category: 'engagement',
         });
