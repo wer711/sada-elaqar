@@ -212,7 +212,7 @@ export default function LeadForm() {
 
       // ✅ تتبع التسجيل في لوحة التحكم
       if (typeof window !== 'undefined' && window.sada) {
-        window.sada.track('signup', {
+        (window.__sadaSafeTrack || (() => {}))('signup', {
           label: 'نموذج التسجيل الرئيسي',
           category: 'conversion',
         });
