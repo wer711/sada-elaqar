@@ -1503,6 +1503,15 @@ export default function InteractiveDemo() {
         bumpGenerationCount();
         daily.bump();
       }
+
+      // ✅ تتبع توليد المحتوى في لوحة التحكم
+      if (typeof window !== 'undefined' && window.sada) {
+        window.sada.track('generate', {
+          label: 'كتابة محتوى عقاري',
+          category: 'content',
+          value: 1,
+        });
+      }
     } catch (err) {
       toast.error('خطأ في الكتابة', { description: err instanceof Error ? err.message : 'يرجى المحاولة مرة أخرى' });
     } finally { setLoading(false); }
@@ -2417,6 +2426,7 @@ export default function InteractiveDemo() {
                 </Button>
               ) : (
                 <Button onClick={handleGenerate} disabled={!canProceed() || loading || daily.isLimited}
+                  data-sada-track="generate-btn" data-sada-category="content"
                   className="bg-[#0D7C66] hover:bg-[#0a6b58] text-white font-bold px-8 cursor-pointer">
                   {loading ? <><Loader2 className="h-4 w-4 animate-spin ml-1" /> جارٍ الكتابة...</>
                   : <><Sparkles className="h-4 w-4 ml-1" /> اكتب المحتوى</>}
