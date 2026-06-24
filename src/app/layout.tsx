@@ -83,12 +83,33 @@ export default function RootLayout({
               autoPageviews: true,
               autoClicks: true,
             };
+            // Defensive: wrap sada.track in try/catch so tracking errors never
+            // break the site's own fetch calls or show console errors.
+            window.__sadaSafeTrack = function(name, props) {
+              try {
+                if (window.sada && typeof window.sada.track === 'function') {
+                  window.sada.track(name, props);
+                }
+              } catch(e) {
+                // Silently ignore tracking errors — never break user experience
+              }
+            };
           `}
         </Script>
         <Script
           src="https://dashboard-iota-nine-75.vercel.app/track.js"
           strategy="afterInteractive"
           async
+          onError={() => {
+            // If track.js fails to load, stub out window.sada so calls don't throw
+            if (typeof window !== 'undefined' && !window.sada) {
+              window.sada = {
+                track: () => {},
+                page: () => {},
+                setVisitor: () => {},
+              };
+            }
+          }}
         />
         {/* ====== نهاية سكربت التتبع ====== */}
       </body>
