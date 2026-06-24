@@ -19,5 +19,11 @@ declare global {
       autoClicks?: boolean;
       disabled?: boolean;
     };
+    __sadaSafeTrack?: (name: string, props?: {
+      label?: string;
+      category?: string;
+      value?: number;
+      metadata?: Record<string, unknown>;
+    }) => void;
   }
 }
