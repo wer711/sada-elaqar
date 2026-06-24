@@ -209,6 +209,14 @@ export default function LeadForm() {
       setDemoSessionsCount(result.demoSessions || 0);
       setLeadCount((prev) => prev + 1);
       toast.success(result.duplicate ? 'أنت مسجّل بالفعل!' : 'تم التسجيل بنجاح!');
+
+      // ✅ تتبع التسجيل في لوحة التحكم
+      if (typeof window !== 'undefined' && window.sada) {
+        window.sada.track('signup', {
+          label: 'نموذج التسجيل الرئيسي',
+          category: 'conversion',
+        });
+      }
     } catch {
       toast.error('حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
     } finally {
