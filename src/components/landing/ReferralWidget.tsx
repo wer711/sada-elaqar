@@ -43,7 +43,7 @@ export default function ReferralWidget({ showAfterGeneration = false }: Referral
 
       // ✅ تتبع نسخ رابط الإحالة في لوحة التحكم
       if (typeof window !== 'undefined' && window.sada) {
-        window.sada.track('referral', {
+        (window.__sadaSafeTrack || (() => {}))('referral', {
           label: 'نسخ رابط إحالة',
           category: 'conversion',
         });
@@ -71,7 +71,7 @@ export default function ReferralWidget({ showAfterGeneration = false }: Referral
 
     // ✅ تتبع مشاركة الإحالة في لوحة التحكم
     if (typeof window !== 'undefined' && window.sada) {
-      window.sada.track('referral', {
+      (window.__sadaSafeTrack || (() => {}))('referral', {
         label: 'مشاركة رابط إحالة - واتساب',
         category: 'conversion',
       });
