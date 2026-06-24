@@ -1506,7 +1506,7 @@ export default function InteractiveDemo() {
 
       // ✅ تتبع توليد المحتوى في لوحة التحكم
       if (typeof window !== 'undefined' && window.sada) {
-        window.sada.track('generate', {
+        (window.__sadaSafeTrack || (() => {}))('generate', {
           label: 'كتابة محتوى عقاري',
           category: 'content',
           value: 1,
