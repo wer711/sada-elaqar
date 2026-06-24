@@ -65,6 +65,14 @@ export default function FeedbackSection({ isFounder = false }: FeedbackSectionPr
       }
       setSubmitted(true);
       toast.success(data.message || 'شكراً لملاحظتك!', { duration: 4000 });
+
+      // ✅ تتبع حفظ الملاحظات في لوحة التحكم
+      if (typeof window !== 'undefined' && window.sada) {
+        window.sada.track('note', {
+          label: 'حفظ ملاحظة',
+          category: 'engagement',
+        });
+      }
     } catch {
       toast.error('حدث خطأ في الاتصال');
     } finally {
