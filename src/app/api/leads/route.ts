@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const {
       name, whatsapp, email, city, country,
       role, challenges, topFeature, monthlyBudget,
-      consent, visitorId,
+      consent, visitorId, styleSample,
     } = body;
 
     // ── Required field validation ──
@@ -94,6 +94,24 @@ export async function POST(req: NextRequest) {
             where: { visitorId, leadConverted: false },
             data: { leadConverted: true },
           });
+
+          // ── الهوية التسويقية: حفظ عينة أسلوب العميل في StyleProfile ──
+          if (styleSample && typeof styleSample === 'string' && styleSample.length > 20) {
+            try {
+              await db.styleProfile.upsert({
+                where: { visitorId },
+                create: {
+                  visitorId,
+                  likedVocab: JSON.stringify({ styleSample: styleSample.slice(0, 1500) }),
+                },
+                update: {
+                  likedVocab: JSON.stringify({ styleSample: styleSample.slice(0, 1500) }),
+                },
+              });
+            } catch {
+              // Non-critical — continue without style profile
+            }
+          }
         }
       } catch {
         // DB query failed — continue without demo behavior (non-critical)
