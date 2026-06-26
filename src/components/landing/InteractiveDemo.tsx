@@ -1247,8 +1247,25 @@ export default function InteractiveDemo() {
     }
   };
 
-  const goNext = () => { if (step < 4 && canProceed()) { setDirection(1); setStep((step + 1) as Step); } };
-  const goPrev = () => { if (step > 1) { setDirection(-1); setStep((step - 1) as Step); } };
+  const goNext = () => {
+    if (step < 4 && canProceed()) {
+      setDirection(1);
+      setStep((step + 1) as Step);
+      // Scroll the demo section into view so the next step is visible
+      setTimeout(() => {
+        document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  };
+  const goPrev = () => {
+    if (step > 1) {
+      setDirection(-1);
+      setStep((step - 1) as Step);
+      setTimeout(() => {
+        document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  };
 
   // ── When property type changes, auto-set the family + clear features that
   //    don't belong to the new family (so we never carry "مسبح" into a land). ──
