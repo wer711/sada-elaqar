@@ -4,6 +4,7 @@ import PainPoints from '@/components/landing/PainPoints'
 import HowItWorks from '@/components/landing/HowItWorks'
 import DailyTip from '@/components/landing/DailyTip'
 import InteractiveDemo from '@/components/landing/InteractiveDemo'
+import SmartAuditor from '@/components/landing/SmartAuditor'
 import Features from '@/components/landing/Features'
 import TargetAudience from '@/components/landing/TargetAudience'
 import FAQ from '@/components/landing/FAQ'
@@ -27,6 +28,7 @@ export default function Home() {
         <DailyTip />
         <InteractiveDemo />
         <ReferralMount />
+        <SmartAuditor />
         <Features />
         <TargetAudience />
         <FAQ />
