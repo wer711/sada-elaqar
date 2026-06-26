@@ -29,6 +29,8 @@ const COUNT_DISPLAY_THRESHOLD = 20;
 
 const FOUNDER_PERKS = [
   'كتابة محتوى غير محدودة حتى إطلاق المشروع النهائي',
+  'تدقيق غير محدود لإعلاناتك القديمة (المدقق الذكي)',
+  'بوصلة استثمارية ذكية لكل عقار (بيع/إيجار/استثمار)',
   'شارة «داعم مبكر» مميزة في حسابك',
   'أولوية في كل الميزات الجديدة قبل الجميع',
   'سعر مدى الحياة — ثابت ولن يتغير عند الإطلاق',
@@ -47,7 +49,9 @@ export default function FounderPlan() {
   const [showPaypal, setShowPaypal] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [success, setSuccess] = useState<{ founderNumber: number } | null>(null);
-  const [paypalClientId, setPaypalClientId] = useState<string | null>(null);
+  const [paypalClientId] = useState<string>(
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'AfViq4cktwMOcmlCkccx_XoBsrseASA0Z_di5s2NCDzYPa2fv8syBhRV6MS9gIeLnPphIjD_XTEkk4-l'
+  );
   const subscriptionIdRef = useRef<string | null>(null);
 
   const visitorId = useVisitorId();
@@ -70,16 +74,6 @@ export default function FounderPlan() {
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Load PayPal client ID — hardcoded fallback for Vercel (NEXT_PUBLIC env var
-  // not working in dashboard). PayPal Client ID is SAFE to expose publicly.
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      const id = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'AfViq4cktwMOcmlCkccx_XoBsrseASA0Z_di5s2NCDzYPa2fv8syBhRV6MS9gIeLnPphIjD_XTEkk4-l';
-      setPaypalClientId(id);
-    });
-    return () => cancelAnimationFrame(raf);
   }, []);
 
   const remaining = founderCount !== null ? Math.max(0, FOUNDER_TARGET - founderCount) : FOUNDER_TARGET;
