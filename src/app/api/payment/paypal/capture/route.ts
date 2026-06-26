@@ -19,7 +19,7 @@ import { db } from '@/lib/db';
  *   PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_API_BASE
  */
 
-const FOUNDER_PLAN_PRICE = 29;
+const FOUNDER_PLAN_PRICE = 9; // USD/month
 const FOUNDER_PLAN_TARGET = 50;
 
 async function getPayPalAccessToken(): Promise<string> {
