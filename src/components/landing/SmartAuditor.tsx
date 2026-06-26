@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, CheckCircle2, XCircle, Lightbulb, Star, TrendingUp } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, XCircle, Lightbulb, Star, TrendingUp, Sparkles, Copy, Check, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,7 +25,7 @@ const PLATFORMS = [
   { value: 'facebook', label: 'فيسبوك' },
 ];
 
-const FREE_AUDIT_LIMIT = 2; // Free audits before requiring subscription
+const FREE_IMPROVE_LIMIT = 3; // 3 free improvements, then paywall
 
 interface AuditResult {
   score: number;
@@ -34,80 +34,56 @@ interface AuditResult {
   suggestions: string[];
 }
 
+interface ImproveResult {
+  improvedAd: string;
+  originalScore: number;
+  improvedScore: number;
+}
+
 export default function SmartAuditor() {
   const [adText, setAdText] = useState('');
   const [platform, setPlatform] = useState('whatsapp');
   const [city, setCity] = useState('');
   const [isAuditing, setIsAuditing] = useState(false);
+  const [isImproving, setIsImproving] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
-  const [auditCount, setAuditCount] = useState<number>(0);
+  const [improved, setImproved] = useState<ImproveResult | null>(null);
+  const [improveCount, setImproveCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [copiedImproved, setCopiedImproved] = useState(false);
   const visitorId = useVisitorId();
 
-  // Load audit count from localStorage on mount
+  // Load improve count from localStorage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('sada_audit_count');
-      if (stored) setAuditCount(parseInt(stored, 10) || 0);
-    } catch {
-      // ignore
-    }
+      const stored = localStorage.getItem('sada_improve_count');
+      if (stored) setImproveCount(parseInt(stored, 10) || 0);
+    } catch { /* ignore */ }
   }, []);
 
+  // ── Audit (free, unlimited) ──
   const handleAudit = useCallback(async () => {
     if (adText.trim().length < 10) {
       toast.error('الصق نص الإعلان', { description: '١٠ أحرف على الأقل' });
       return;
     }
 
-    // Check free limit
-    if (auditCount >= FREE_AUDIT_LIMIT) {
-      setShowPaywall(true);
-      toast.warning('انتهت محاولاتك المجانية', {
-        description: 'اشترك كداعم مبكر للتدقيق غير المحدود + نسخة محسّنة فوراً',
-        duration: 6000,
-        action: {
-          label: 'اشترك الآن',
-          onClick: () => {
-            document.getElementById('founder-plan')?.scrollIntoView({ behavior: 'smooth' });
-          },
-        },
-      });
-      return;
-    }
-
     setIsAuditing(true);
     setResult(null);
+    setImproved(null);
+    setShowPaywall(false);
 
     try {
       const fetchFn = (typeof window !== 'undefined' && window.__safeFetch) || fetch;
       const res = await fetchFn('/api/demo/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          adText: adText.trim(),
-          platform,
-          city,
-          visitorId,
-        }),
+        body: JSON.stringify({ adText: adText.trim(), platform, city, visitorId }),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.error || 'تعذّر التحليل');
-        return;
-      }
+      if (!res.ok) { toast.error(data.error || 'تعذّر التحليل'); return; }
 
       setResult(data);
-      // Increment audit count
-      const newCount = auditCount + 1;
-      setAuditCount(newCount);
-      try {
-        localStorage.setItem('sada_audit_count', String(newCount));
-      } catch {
-        // ignore
-      }
       (window.__sadaSafeTrack || (() => {}))('audit', {
         label: 'تدقيق منشور قديم',
         category: 'engagement',
@@ -120,30 +96,112 @@ export default function SmartAuditor() {
     }
   }, [adText, platform, city, visitorId]);
 
+  // ── Improve (3 free, then paywall) ──
+  const handleImprove = useCallback(async () => {
+    if (!result) return;
+
+    // Check free limit
+    if (improveCount >= FREE_IMPROVE_LIMIT) {
+      setShowPaywall(true);
+      toast.warning('انتهت محاولاتك المجانية للتحسين', {
+        description: 'اشترك كداعم مبكر للتحسين غير المحدود + كل المزايا الحصرية',
+        duration: 6000,
+        action: {
+          label: 'اشترك الآن',
+          onClick: () => document.getElementById('founder-plan')?.scrollIntoView({ behavior: 'smooth' }),
+        },
+      });
+      return;
+    }
+
+    setIsImproving(true);
+    setImproved(null);
+
+    try {
+      const fetchFn = (typeof window !== 'undefined' && window.__safeFetch) || fetch;
+      const res = await fetchFn('/api/demo/improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adText: adText.trim(),
+          platform,
+          city,
+          visitorId,
+          weaknesses: result.weaknesses,
+          score: result.score,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || 'تعذّر التحسين'); return; }
+
+      setImproved(data);
+      // Increment count
+      const newCount = improveCount + 1;
+      setImproveCount(newCount);
+      try { localStorage.setItem('sada_improve_count', String(newCount)); } catch { /* ignore */ }
+
+      (window.__sadaSafeTrack || (() => {}))('improve', {
+        label: 'تحسين إعلان قديم',
+        category: 'conversion',
+        value: 1,
+      });
+
+      toast.success('تم تحسين إعلانك!', {
+        description: newCount < FREE_IMPROVE_LIMIT
+          ? `باقي ${FREE_IMPROVE_LIMIT - newCount} محاولات تحسين مجانية`
+          : 'هذه آخر محاولة مجانية — اشترك للمتابعة',
+        duration: 4000,
+      });
+    } catch {
+      toast.error('حدث خطأ في الاتصال');
+    } finally {
+      setIsImproving(false);
+    }
+  }, [adText, platform, city, visitorId, result, improveCount]);
+
+  // ── Copy improved ad ──
+  const handleCopyImproved = useCallback(async () => {
+    if (!improved?.improvedAd) return;
+    try {
+      await navigator.clipboard.writeText(improved.improvedAd);
+      setCopiedImproved(true);
+      toast.success('تم نسخ الإعلان المحسّن!', { duration: 2500 });
+      setTimeout(() => setCopiedImproved(false), 2000);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = improved.improvedAd;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopiedImproved(true);
+      setTimeout(() => setCopiedImproved(false), 2000);
+    }
+  }, [improved]);
+
   const resetAudit = () => {
     setAdText('');
     setResult(null);
+    setImproved(null);
+    setShowPaywall(false);
     setCity('');
   };
 
-  // Score color
+  // Score styling
   const scoreColor = result
     ? result.score >= 8 ? 'text-[#0D7C66]'
     : result.score >= 5 ? 'text-[#D4A853]'
-    : 'text-[#E0793C]'
-    : '';
+    : 'text-[#E0793C]' : '';
   const scoreBg = result
     ? result.score >= 8 ? 'bg-[#0D7C66]/10 border-[#0D7C66]/30'
     : result.score >= 5 ? 'bg-[#D4A853]/10 border-[#D4A853]/30'
-    : 'bg-[#E0793C]/10 border-[#E0793C]/30'
-    : '';
+    : 'bg-[#E0793C]/10 border-[#E0793C]/30' : '';
   const scoreLabel = result
     ? result.score >= 9 ? 'ممتاز'
     : result.score >= 7 ? 'جيد'
     : result.score >= 5 ? 'متوسط'
     : result.score >= 3 ? 'ضعيف'
-    : 'سيء'
-    : '';
+    : 'سيء' : '';
 
   return (
     <section id="auditor" className="py-16 md:py-20 px-4 bg-gradient-to-b from-[#F5F0E8] to-[#FBF8F2]">
@@ -163,10 +221,10 @@ export default function SmartAuditor() {
             </span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-[#211F1A] mb-2">
-            هل إعلانك القديم فعّال؟ احصل على تقييم فوري
+            هل إعلانك القديم فعّال؟ احصل على تقييم فوري + تحسين
           </h2>
           <p className="text-[#5B564C] text-sm md:text-base leading-relaxed">
-            الصق نص أي إعلان عقاري قديم، وسنحلّله فوراً: درجة من ١٠ + نقاط القوة + نقاط الضعف + اقتراحات تحسين
+            الصق نص أي إعلان عقاري، سنحلّله فوراً (درجة + نقاط قوة/ضعف) ثم نحسّنه لك إلى ١٠/١٠
           </p>
         </motion.div>
 
@@ -178,8 +236,8 @@ export default function SmartAuditor() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           {!result ? (
+            /* ─── Audit Form ─── */
             <div className="bg-white rounded-2xl border border-[#E8E1D2] shadow-sm p-6 md:p-8 space-y-5">
-              {/* Ad text */}
               <div>
                 <Label className="text-[#211F1A] font-semibold text-sm mb-2 block">
                   الصق نص إعلانك العقاري <span className="text-[#DC3545]">*</span>
@@ -195,7 +253,6 @@ export default function SmartAuditor() {
                 <p className="text-[10px] text-[#5B564C]/60 mt-1">{adText.length}/3000</p>
               </div>
 
-              {/* Platform + City */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-[#211F1A] font-semibold text-xs mb-1.5 block">المنصة</Label>
@@ -222,7 +279,6 @@ export default function SmartAuditor() {
                 </div>
               </div>
 
-              {/* Submit */}
               <Button
                 onClick={handleAudit}
                 disabled={isAuditing || adText.trim().length < 10}
@@ -242,40 +298,11 @@ export default function SmartAuditor() {
               </Button>
 
               <p className="text-center text-[10px] text-[#5B564C]/70">
-                {auditCount < FREE_AUDIT_LIMIT
-                  ? `🔍 مجاني تماماً — باقي ${FREE_AUDIT_LIMIT - auditCount} محاولة مجانية`
-                  : '🔍 انتهت محاولاتك المجانية — اشترك للاستمرار'}
+                🔍 مجاني تماماً — لا يحتاج تسجيل
               </p>
-
-              {/* Paywall CTA (when limit reached) */}
-              {showPaywall && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl border border-[#D4A853]/30 bg-gradient-to-l from-[#D4A853]/8 to-[#FBF8F2] p-4 mt-3"
-                >
-                  <div className="flex items-start gap-3">
-                    <Star className="w-5 h-5 text-[#D4A853] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-bold text-[#211F1A]">
-                        اشترك كداعم مبكر للتدقيق غير المحدود
-                      </p>
-                      <p className="text-xs text-[#5B564C] mt-1 leading-relaxed">
-                        احصل على تدقيق غير محدود + نسخة محسّنة فوراً + كل المزايا الحصرية الأخرى.
-                      </p>
-                      <a href="#founder-plan" className="inline-block mt-2">
-                        <Button size="sm" className="bg-[#D4A853] hover:bg-[#c4974a] text-white text-xs cursor-pointer">
-                          <TrendingUp className="w-3 h-3 ml-1" />
-                          اشترك الآن — $٩/شهر
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
             </div>
           ) : (
-            /* ─── Result ─── */
+            /* ─── Audit Result + Improve ─── */
             <AnimatePresence mode="wait">
               <motion.div
                 key="result"
@@ -287,7 +314,7 @@ export default function SmartAuditor() {
               >
                 {/* Score */}
                 <div className={`rounded-xl border-2 ${scoreBg} p-5 text-center`}>
-                  <p className="text-xs font-bold text-[#5B564C] mb-1">درجة الإعلان</p>
+                  <p className="text-xs font-bold text-[#5B564C] mb-1">درجة إعلانك الحالي</p>
                   <p className={`text-5xl font-black ${scoreColor}`}>
                     {result.score}<span className="text-2xl text-[#5B564C]/50">/١٠</span>
                   </p>
@@ -303,8 +330,7 @@ export default function SmartAuditor() {
                   <ul className="space-y-1.5">
                     {result.strengths.map((s, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-[#5B564C]">
-                        <span className="text-[#0D7C66] mt-0.5">✓</span>
-                        {s}
+                        <span className="text-[#0D7C66] mt-0.5">✓</span>{s}
                       </li>
                     ))}
                   </ul>
@@ -319,8 +345,7 @@ export default function SmartAuditor() {
                   <ul className="space-y-1.5">
                     {result.weaknesses.map((w, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-[#5B564C]">
-                        <span className="text-[#E0793C] mt-0.5">✗</span>
-                        {w}
+                        <span className="text-[#E0793C] mt-0.5">✗</span>{w}
                       </li>
                     ))}
                   </ul>
@@ -335,34 +360,145 @@ export default function SmartAuditor() {
                   <ul className="space-y-1.5">
                     {result.suggestions.map((s, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-[#5B564C]">
-                        <span className="text-[#D4A853] mt-0.5">💡</span>
-                        {s}
+                        <span className="text-[#D4A853] mt-0.5">💡</span>{s}
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Founder CTA */}
-                <div className="rounded-xl border border-[#D4A853]/30 bg-gradient-to-l from-[#D4A853]/8 to-[#FBF8F2] p-4">
-                  <div className="flex items-start gap-3">
-                    <Star className="w-5 h-5 text-[#D4A853] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-bold text-[#211F1A]">
-                        تريد نسخة محسّنة فوراً؟
-                      </p>
-                      <p className="text-xs text-[#5B564C] mt-1 leading-relaxed">
-                        اشترك كداعم مبكر واحصل على إعادة كتابة كاملة لإعلانك بأسلوب احترافي +
-                        كل المزايا الحصرية الأخرى.
-                      </p>
-                      <a href="#founder-plan" className="inline-block mt-2">
-                        <Button size="sm" className="bg-[#D4A853] hover:bg-[#c4974a] text-white text-xs cursor-pointer">
-                          <TrendingUp className="w-3 h-3 ml-1" />
-                          اشترك الآن
-                        </Button>
-                      </a>
+                {/* ─── IMPROVE BUTTON ─── */}
+                {!improved && !showPaywall && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="pt-2"
+                  >
+                    <Button
+                      onClick={handleImprove}
+                      disabled={isImproving}
+                      data-sada-track="improve-btn"
+                      data-sada-category="conversion"
+                      className="w-full h-12 bg-gradient-to-l from-[#0D7C66] to-[#0a6b58] hover:from-[#0a6b58] hover:to-[#095a4b] text-white font-bold text-base rounded-lg shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isImproving ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="animate-spin size-5" />
+                          جارٍ تحسين إعلانك...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="h-5 w-5" />
+                          ✨ حسّن إعلانك إلى ١٠/١٠
+                          {improveCount < FREE_IMPROVE_LIMIT && (
+                            <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                              باقي {FREE_IMPROVE_LIMIT - improveCount} مجانية
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </Button>
+                  </motion.div>
+                )}
+
+                {/* ─── IMPROVED RESULT ─── */}
+                {improved && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-4"
+                  >
+                    {/* Score comparison */}
+                    <div className="flex items-center justify-center gap-4 py-3">
+                      <div className="text-center">
+                        <p className="text-[10px] text-[#5B564C] mb-1">قبل</p>
+                        <p className="text-2xl font-black text-[#E0793C]">{improved.originalScore}/١٠</p>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-[#0D7C66] rotate-180" />
+                      <div className="text-center">
+                        <p className="text-[10px] text-[#5B564C] mb-1">بعد</p>
+                        <p className="text-2xl font-black text-[#0D7C66]">١٠/١٠</p>
+                      </div>
                     </div>
-                  </div>
-                </div>
+
+                    {/* Improved ad text */}
+                    <div className="rounded-xl border-2 border-[#0D7C66]/30 bg-[#0D7C66]/5 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-bold text-[#0D7C66] flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4" />
+                          الإعلان المحسّن (جاهز للنشر)
+                        </p>
+                        <Button
+                          onClick={handleCopyImproved}
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-xs border-[#0D7C66]/30 text-[#0D7C66] hover:bg-[#0D7C66]/10 cursor-pointer"
+                        >
+                          {copiedImproved ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          {copiedImproved ? 'تم النسخ' : 'نسخ'}
+                        </Button>
+                      </div>
+                      <p className="text-sm text-[#211F1A] leading-relaxed whitespace-pre-wrap">
+                        {improved.improvedAd}
+                      </p>
+                    </div>
+
+                    {/* Remaining free attempts */}
+                    {improveCount < FREE_IMPROVE_LIMIT ? (
+                      <p className="text-center text-xs text-[#5B564C]">
+                        ✨ باقي {FREE_IMPROVE_LIMIT - improveCount} محاولات تحسين مجانية
+                      </p>
+                    ) : (
+                      <div className="rounded-xl border border-[#D4A853]/30 bg-gradient-to-l from-[#D4A853]/8 to-[#FBF8F2] p-4">
+                        <div className="flex items-start gap-3">
+                          <Star className="w-5 h-5 text-[#D4A853] shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-bold text-[#211F1A]">
+                              انتهت محاولاتك المجانية
+                            </p>
+                            <p className="text-xs text-[#5B564C] mt-1 leading-relaxed">
+                              اشترك كداعم مبكر للتحسين غير المحدود + كل المزايا الحصرية الأخرى.
+                            </p>
+                            <a href="#founder-plan" className="inline-block mt-2">
+                              <Button size="sm" className="bg-[#D4A853] hover:bg-[#c4974a] text-white text-xs cursor-pointer">
+                                <TrendingUp className="w-3 h-3 ml-1" />
+                                اشترك الآن — $٩/شهر
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* ─── Paywall (when limit reached without improvement) ─── */}
+                {showPaywall && !improved && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-xl border border-[#D4A853]/30 bg-gradient-to-l from-[#D4A853]/8 to-[#FBF8F2] p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Star className="w-5 h-5 text-[#D4A853] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-bold text-[#211F1A]">
+                          انتهت محاولاتك المجانية للتحسين
+                        </p>
+                        <p className="text-xs text-[#5B564C] mt-1 leading-relaxed">
+                          اشترك كداعم مبكر للتحسين غير المحدود + إعادة كتابة فورية + كل المزايا الحصرية.
+                        </p>
+                        <a href="#founder-plan" className="inline-block mt-2">
+                          <Button size="sm" className="bg-[#D4A853] hover:bg-[#c4974a] text-white text-xs cursor-pointer">
+                            <TrendingUp className="w-3 h-3 ml-1" />
+                            اشترك الآن — $٩/شهر
+                          </Button>
+                        </a>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Reset */}
                 <Button
