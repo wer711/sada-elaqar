@@ -21,7 +21,7 @@ import { useVisitorId } from '@/lib/visitor';
  * The counter shows the REAL count of active founders (no fabrication).
  */
 
-const FOUNDER_PRICE = 29; // USD
+const FOUNDER_PRICE = 9; // USD/month — monthly subscription for sustainability
 const FOUNDER_TARGET = 50; // Limited to 50 for urgency (was 100)
 // Counter shown only after crossing 20 founders (40% of 50).
 // Below that, a low number looks depressing. We show "كن من الأوائل" instead.
@@ -181,7 +181,7 @@ export default function FounderPlan() {
             </span>
           </div>
           <h2 className="text-2xl md:text-4xl font-bold text-[#211F1A] mb-3">
-            استثمر $٢٩ اليوم، وكن شريكاً مؤسساً في مستقبل التسويق العقاري
+            استثمر $٩ شهرياً، وكن شريكاً مؤسساً في مستقبل التسويق العقاري
           </h2>
           <p className="text-[#5B564C] text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
             لست مجرد مشترك — أنت شريك في بناء المقرّ الرقمي الأول لمسوّقي العقار
@@ -298,14 +298,14 @@ export default function FounderPlan() {
                 <Crown className="w-5 h-5 text-[#D4A853]" />
                 <h3 className="text-lg font-bold">الداعم المبكر</h3>
               </div>
-              <p className="text-xs text-white/80">للمؤمنين بالمشروع — دفعة واحدة</p>
+              <p className="text-xs text-white/80">للمؤمنين بالمشروع — اشتراك شهري رمزي</p>
             </div>
             <div className="mb-5">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-black">${FOUNDER_PRICE}</span>
                 <span className="text-sm text-white/70 line-through">$249</span>
               </div>
-              <p className="text-xs text-white/70 mt-1">دفعة واحدة · بدون اشتراك متكرر</p>
+              <p className="text-xs text-white/70 mt-1">شهرياً · يمكنك الإلغاء في أي وقت</p>
             </div>
             <ul className="space-y-2.5 mb-6">
               {FOUNDER_PERKS.map((perk, idx) => (
@@ -473,7 +473,7 @@ export default function FounderPlan() {
             <Sparkles className="w-5 h-5 text-[#0D7C66] shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-bold text-[#0D7C66] mb-1.5">
-                لماذا $٢٩؟
+                لماذا $٩ شهرياً؟
               </p>
               <p className="text-xs md:text-sm text-[#5B564C] leading-relaxed">
                 نحن نبني المقرّ الرقمي الأول لمسوّقي العقار في الوطن العربي —
@@ -495,7 +495,7 @@ export default function FounderPlan() {
               <p className="text-xs text-[#5B564C] leading-relaxed">
                 وكيل عقاري يقضي <strong>ساعة في كتابة وصف عقار واحد</strong>.
                 مع صدى العقار: <strong>٧ ثوانٍ</strong>. وفّر ٥٣ ساعة شهرياً =
-                <strong className="text-[#0D7C66]"> توفير يفوق $٢٩ آلاف مرة</strong>.
+                <strong className="text-[#0D7C66]"> توفير يفوق $٩ آلاف مرة شهرياً</strong>.
               </p>
             </div>
           </div>
