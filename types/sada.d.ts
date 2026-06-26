@@ -25,5 +25,7 @@ declare global {
       value?: number;
       metadata?: Record<string, unknown>;
     }) => void;
+    __originalFetch?: typeof fetch;
+    __safeFetch?: (url: string, options?: RequestInit) => Promise<Response>;
   }
 }
