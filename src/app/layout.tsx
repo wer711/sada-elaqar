@@ -74,6 +74,40 @@ export default function RootLayout({
         {children}
         <Toaster richColors position="top-center" dir="rtl" />
 
+        {/* ====== حماية fetch من اعتراض الإضافات ====== */}
+        <Script id="fetch-protect" strategy="beforeInteractive">
+          {`
+            // Save the original fetch before any Chrome extension can override it.
+            // This ensures our API calls (to /api/* and PayPal) always work,
+            // even if an extension intercepts window.fetch.
+            if (window.__originalFetch === undefined) {
+              window.__originalFetch = window.fetch.bind(window);
+            }
+            // Also provide a safe fetch wrapper that falls back to XMLHttpRequest
+            window.__safeFetch = function(url, options) {
+              try {
+                return window.__originalFetch(url, options);
+              } catch(e) {
+                // If fetch is broken by an extension, fall back to XHR
+                return new Promise(function(resolve, reject) {
+                  var xhr = new XMLHttpRequest();
+                  xhr.open(options && options.method || 'GET', url);
+                  xhr.onload = function() {
+                    resolve(new Response(xhr.responseText, {
+                      status: xhr.status,
+                      statusText: xhr.statusText,
+                      headers: { 'Content-Type': xhr.getResponseHeader('Content-Type') || 'application/json' }
+                    }));
+                  };
+                  xhr.onerror = function() { reject(new TypeError('Network request failed')); };
+                  if (options && options.body) xhr.send(options.body);
+                  else xhr.send();
+                });
+              }
+            };
+          `}
+        </Script>
+
         {/* ====== سكربت تتبع صدى العقار — يبدأ هنا ====== */}
         <Script id="sada-config" strategy="beforeInteractive">
           {`
