@@ -24,7 +24,7 @@ import { db } from '@/lib/db';
  *   PAYPAL_API_BASE     — https://api-m.paypal.com (live) or https://api-m.sandbox.paypal.com (sandbox)
  */
 
-const FOUNDER_PLAN_PRICE = 29; // USD
+const FOUNDER_PLAN_PRICE = 9; // USD/month
 const FOUNDER_PLAN_TARGET = 50;
 
 // ─── PayPal access token (cached per request) ───
