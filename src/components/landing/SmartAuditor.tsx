@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, CheckCircle2, XCircle, Lightbulb, Star, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
@@ -25,6 +25,8 @@ const PLATFORMS = [
   { value: 'facebook', label: 'فيسبوك' },
 ];
 
+const FREE_AUDIT_LIMIT = 2; // Free audits before requiring subscription
+
 interface AuditResult {
   score: number;
   strengths: string[];
@@ -38,11 +40,39 @@ export default function SmartAuditor() {
   const [city, setCity] = useState('');
   const [isAuditing, setIsAuditing] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
+  const [auditCount, setAuditCount] = useState<number>(0);
+  const [showPaywall, setShowPaywall] = useState(false);
   const visitorId = useVisitorId();
+
+  // Load audit count from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('sada_audit_count');
+      if (stored) setAuditCount(parseInt(stored, 10) || 0);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const handleAudit = useCallback(async () => {
     if (adText.trim().length < 10) {
       toast.error('الصق نص الإعلان', { description: '١٠ أحرف على الأقل' });
+      return;
+    }
+
+    // Check free limit
+    if (auditCount >= FREE_AUDIT_LIMIT) {
+      setShowPaywall(true);
+      toast.warning('انتهت محاولاتك المجانية', {
+        description: 'اشترك كداعم مبكر للتدقيق غير المحدود + نسخة محسّنة فوراً',
+        duration: 6000,
+        action: {
+          label: 'اشترك الآن',
+          onClick: () => {
+            document.getElementById('founder-plan')?.scrollIntoView({ behavior: 'smooth' });
+          },
+        },
+      });
       return;
     }
 
@@ -70,6 +100,14 @@ export default function SmartAuditor() {
       }
 
       setResult(data);
+      // Increment audit count
+      const newCount = auditCount + 1;
+      setAuditCount(newCount);
+      try {
+        localStorage.setItem('sada_audit_count', String(newCount));
+      } catch {
+        // ignore
+      }
       (window.__sadaSafeTrack || (() => {}))('audit', {
         label: 'تدقيق منشور قديم',
         category: 'engagement',
@@ -204,8 +242,37 @@ export default function SmartAuditor() {
               </Button>
 
               <p className="text-center text-[10px] text-[#5B564C]/70">
-                🔍 مجاني تماماً — لا يحتاج تسجيل
+                {auditCount < FREE_AUDIT_LIMIT
+                  ? `🔍 مجاني تماماً — باقي ${FREE_AUDIT_LIMIT - auditCount} محاولة مجانية`
+                  : '🔍 انتهت محاولاتك المجانية — اشترك للاستمرار'}
               </p>
+
+              {/* Paywall CTA (when limit reached) */}
+              {showPaywall && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-[#D4A853]/30 bg-gradient-to-l from-[#D4A853]/8 to-[#FBF8F2] p-4 mt-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <Star className="w-5 h-5 text-[#D4A853] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-[#211F1A]">
+                        اشترك كداعم مبكر للتدقيق غير المحدود
+                      </p>
+                      <p className="text-xs text-[#5B564C] mt-1 leading-relaxed">
+                        احصل على تدقيق غير محدود + نسخة محسّنة فوراً + كل المزايا الحصرية الأخرى.
+                      </p>
+                      <a href="#founder-plan" className="inline-block mt-2">
+                        <Button size="sm" className="bg-[#D4A853] hover:bg-[#c4974a] text-white text-xs cursor-pointer">
+                          <TrendingUp className="w-3 h-3 ml-1" />
+                          اشترك الآن — $٩/شهر
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           ) : (
             /* ─── Result ─── */
