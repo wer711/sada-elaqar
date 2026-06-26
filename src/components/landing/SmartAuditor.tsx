@@ -128,6 +128,7 @@ export default function SmartAuditor() {
           city,
           visitorId,
           weaknesses: result.weaknesses,
+          suggestions: result.suggestions,
           score: result.score,
         }),
       });
