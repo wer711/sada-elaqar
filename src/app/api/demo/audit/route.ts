@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ZAI from 'z-ai-web-dev-sdk';
 
 /**
  * POST /api/demo/audit
@@ -10,8 +9,8 @@ import ZAI from 'z-ai-web-dev-sdk';
  * - Weaknesses (what's missing/wrong)
  * - Suggestions (how to fix each weakness)
  *
- * The scoring is rule-based to ensure consistency: the same ad always gets
- * approximately the same score (±1), unlike free-form LLM scoring.
+ * Uses rule-based scoring for consistency + tries Z.AI LLM for richer analysis.
+ * Falls back to rule-based analysis if Z.AI is unavailable (e.g., on Vercel).
  */
 
 interface AuditResult {
@@ -35,17 +34,7 @@ export async function POST(req: NextRequest) {
 
     const cleanAdText = adText.trim().slice(0, 3000);
 
-    const platformName = platform === 'whatsapp' ? 'واتساب'
-      : platform === 'twitter' ? 'إكس (تويتر)'
-      : platform === 'instagram' ? 'إنستغرام'
-      : platform === 'snapchat' ? 'سناب شات'
-      : platform === 'linkedin' ? 'لينكدين'
-      : platform === 'facebook' ? 'فيسبوك'
-      : 'عام';
-
-    // ── Rule-based pre-scoring (deterministic) ──
-    // We check for presence of key elements before calling the LLM,
-    // so the score is anchored to objective criteria, not just LLM opinion.
+    // ── Rule-based scoring (deterministic, always works) ──
     const lowerAd = cleanAdText.toLowerCase();
     const hasPrice = /ريال|درهم|دينار|جنيه|دولار|\$\s?\d|سعر|للبيع بـ|بسعر/i.test(cleanAdText);
     const hasArea = /\d+\s*م²|متر|مساحة/i.test(cleanAdText);
@@ -57,7 +46,6 @@ export async function POST(req: NextRequest) {
     const isStructured = cleanAdText.includes('\n') && cleanAdText.split('\n').length >= 3;
     const hasFeatures = /مصعد|موقف|مسبح|حديقة|تشطيب|تكييف|أمان|مفروش|مرافق|إطلالة|شرفة/i.test(cleanAdText);
 
-    // Calculate base score (0-10) from rules
     let ruleScore = 0;
     if (hasPrice) ruleScore += 1.5;
     if (hasArea) ruleScore += 1;
@@ -68,138 +56,101 @@ export async function POST(req: NextRequest) {
     if (hasHook) ruleScore += 1;
     if (isStructured) ruleScore += 1;
     if (hasFeatures) ruleScore += 1;
-    // Cap at 9 — 10 is reserved for LLM-verified excellence
     ruleScore = Math.min(9, Math.round(ruleScore));
 
-    // ── Build audit prompt ──
-    // The LLM's job is now: (1) confirm/adjust the rule-based score ±1,
-    // (2) identify specific strengths/weaknesses, (3) give actionable suggestions.
-    // This makes scoring consistent because it's anchored to rules.
-    const systemPrompt = `أنت مدقق محتوى تسويقي عقاري محترف. تحلل الإعلانات العقارية وتعطي تقييماً دقيقاً ومتسقاً.
+    // ── Build rule-based analysis (always available) ──
+    const strengths: string[] = [];
+    const weaknesses: string[] = [];
+    const suggestions: string[] = [];
 
-قمتُ بتقييم مبدئي للإعلان بناءً على معايير موضوعية. درجتي المبدئية: ${ruleScore}/١٠.
+    if (hasPrice) strengths.push('تم ذكر السعر بوضوح');
+    if (hasArea) strengths.push('تم ذكر المساحة');
+    if (hasRooms) strengths.push('تم ذكر عدد الغرف');
+    if (hasLocation) strengths.push('تم تحديد الموقع');
+    if (hasCTA) strengths.push('توجد دعوة للتواصل');
+    if (hasEmoji) strengths.push('استخدام إيموجي مناسبة');
+    if (hasHook) strengths.push('جملة افتتاحية جذابة');
+    if (isStructured) strengths.push('النص منظّم في أسطر واضحة');
+    if (hasFeatures) strengths.push('تم ذكر مميزات العقار');
 
-مهمتك:
-1. راجع درجتي المبدئية — يمكنك رفعها أو خفضها بمقدار ١ فقط (إذا رأيت جودة استثنائية أو أخطاء فادحة).
-2. اذكر ٢-٣ نقاط قوة فعلية في النص.
-3. اذكر ٢-٣ نقاط ضعف فعلية تحتاج تحسين.
-4. لكل نقطة ضعف، اكتب اقتراحاً محدداً وقابلاً للتنفيذ (ليس عاماً).
+    if (!hasHook) { weaknesses.push('لا توجد جملة افتتاحية جذابة'); suggestions.push('ابدأ بجملة قوية مثل: "🔥 فرصة لا تتكرر في..."'); }
+    if (!hasCTA) { weaknesses.push('لا توجد دعوة واضحة للتواصل'); suggestions.push('أضف في النهاية: "للجادين، تواصل عبر واتساب"'); }
+    if (!hasPrice) { weaknesses.push('لم يتم ذكر السعر'); suggestions.push('أضف السعر بوضوح: "السعر: ٨٥٠٬٠٠٠ ريال"'); }
+    if (!hasArea) { weaknesses.push('لم يتم ذكر المساحة'); suggestions.push('أضف المساحة: "المساحة: ١٥٠ م²"'); }
+    if (!isStructured) { weaknesses.push('النص غير منظّم — كتلة واحدة صعبة القراءة'); suggestions.push('قسّم النص لأسطر: نوع العقار / الموقع / السعر / المميزات'); }
+    if (!hasFeatures) { weaknesses.push('لم يتم ذكر أي مميزات خاصة'); suggestions.push('أضف مميزات: مصعد، موقف سيارات، تشطيب فاخر...'); }
+    if (!hasEmoji) { weaknesses.push('لا توجد إيموجي — النص يبدو جافاً'); suggestions.push('أضف ٢-٣ إيموجي مناسبة: 🏠 📍 💰'); }
 
-⚠️ قواعد صارمة:
-- التقييم يجب أن يكون متسقاً: نفس النص = نفس الدرجة (±١).
-- لا ترفع الدرجة فوق ٩ إلا إذا كان الإعلان احترافياً فعلاً بكل المعايير.
-- نقاط الضعف يجب أن تكون محددة (مثال: "لم تذكر طريقة الدفع" وليس "النص يحتاج تحسين").
-- الاقتراحات يجب أن تكون قابلة للتنفيذ مباشرة (مثال: "أضف جملة: يقبل التقسيط" وليس "حسّن العرض").
+    // Ensure we have at least 2 of each
+    while (strengths.length < 2) strengths.push('تم ذكر نوع العقار');
+    while (weaknesses.length < 2) weaknesses.push('النص يحتاج تحسينات إضافية');
+    while (suggestions.length < 2) suggestions.push('أعد قراءة الإعلان وتأكد من وضوح جميع المعلومات');
 
-أعد النتيجة بصيغة JSON فقط:
-{
-  "score": رقم من 1 إلى 10,
-  "strengths": ["نقطة قوة 1", "نقطة قوة 2"],
-  "weaknesses": ["نقطة ضعف 1 محددة", "نقطة ضعف 2 محددة"],
-  "suggestions": ["اقتراح 1 قابل للتنفيذ", "اقتراح 2 قابل للتنفيذ"]
-}`;
-
-    const userPrompt = `حلّل هذا الإعلان العقاري:
-
-المنصة: ${platformName}
-المدينة: ${city || 'غير محددة'}
-الدولة: ${country || 'غير محددة'}
-
-الدرجة المبدئية (من معايير موضوعية): ${ruleScore}/١٠
-- ذكر السعر: ${hasPrice ? '✓' : '✗'}
-- ذكر المساحة: ${hasArea ? '✓' : '✗'}
-- ذكر الغرف/المرافق: ${hasRooms ? '✓' : '✗'}
-- ذكر الموقع: ${hasLocation ? '✓' : '✗'}
-- دعوة للتواصل: ${hasCTA ? '✓' : '✗'}
-- إيموجي: ${hasEmoji ? '✓' : '✗'}
-- جملة افتتاحية جذابة: ${hasHook ? '✓' : '✗'}
-- نص منظّم (أسطر متعددة): ${isStructured ? '✓' : '✗'}
-- ذكر مميزات: ${hasFeatures ? '✓' : '✗'}
-
-نص الإعلان:
-${cleanAdText}
-
-أعطِ التقييم النهائي بصيغة JSON.`;
-
-    // ── Call Z.AI ──
-    // Hardcoded config (Vercel env vars not working in dashboard)
-    const ZAI_CONFIG = {
-      baseUrl: 'https://internal-api.z.ai/v1',
-      apiKey: 'Z.ai',
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiODM3ZTdiMDEtN2RlNi00MTc1LTg1MDAtMTRmMWJmOWE2NTQ0IiwiY2hhdF9pZCI6ImNoYXQtYmIyNTU3MWQtYWU3MS00NTFhLWExOGEtZDE3MzRiY2RkYTZiIiwicGxhdGZvcm0iOiJ6YWkifQ.MSYMuwgNSj-eIAfNb9A2MB6oZG1YjLEyWHppvCB1W4s',
-      userId: '837e7b01-7de6-4175-8500-14f1bf9a6544',
+    const result: AuditResult = {
+      score: ruleScore,
+      strengths: strengths.slice(0, 4),
+      weaknesses: weaknesses.slice(0, 4),
+      suggestions: suggestions.slice(0, 4),
     };
 
-    let zai;
+    // ── Try Z.AI for richer analysis (optional, non-blocking) ──
     try {
-      // Try .create() first (works locally with .z-ai-config)
-      zai = await ZAI.create();
-    } catch {
-      // Production: construct directly from hardcoded config
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      zai = new (ZAI as any)(ZAI_CONFIG);
-    }
-
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      thinking: { type: 'disabled' },
-    });
-
-    const text = completion.choices[0]?.message?.content || '';
-    const clean = text.replace(/```json|```/g, '').trim();
-
-    let parsed: AuditResult;
-    try {
-      parsed = JSON.parse(clean);
-    } catch {
-      // Fallback: use rule-based score only
-      parsed = {
-        score: ruleScore,
-        strengths: hasPrice ? ['تم ذكر السعر'] : ['تم ذكر نوع العقار'],
-        weaknesses: [
-          ...(hasCTA ? [] : ['لا توجد دعوة واضحة للتواصل']),
-          ...(hasHook ? [] : ['الجملة الافتتاحية ضعيفة']),
-          ...(isStructured ? [] : ['النص غير منظّم']),
-        ].slice(0, 3),
-        suggestions: [
-          ...(hasCTA ? [] : ['أضف في النهاية: "للجادين، تواصل عبر واتساب"']),
-          ...(hasHook ? [] : ['ابدأ بجملة جذابة: "🔥 فرصة لا تتكرر في..."']),
-          ...(isStructured ? [] : ['قسّم النص لأسطر: نوع العقار / الموقع / السعر / المميزات']),
-        ].slice(0, 3),
+      const ZAI = (await import('z-ai-web-dev-sdk')).default;
+      const ZAI_CONFIG = {
+        baseUrl: 'https://internal-api.z.ai/v1',
+        apiKey: 'Z.ai',
+        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiODM3ZTdiMDEtN2RlNi00MTc1LTg1MDAtMTRmMWJmOWE2NTQ0IiwiY2hhdF9pZCI6ImNoYXQtYmIyNTU3MWQtYWU3MS00NTFhLWExOGEtZDE3MzRiY2RkYTZiIiwicGxhdGZvcm0iOiJ6YWkifQ.MSYMuwgNSj-eIAfNb9A2MB6oZG1YjLEyWHppvCB1W4s',
+        userId: '837e7b01-7de6-4175-8500-14f1bf9a6544',
       };
+
+      let zai;
+      try {
+        zai = await ZAI.create();
+      } catch {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        zai = new (ZAI as any)(ZAI_CONFIG);
+      }
+
+      const platformName = platform === 'whatsapp' ? 'واتساب'
+        : platform === 'twitter' ? 'إكس' : platform === 'instagram' ? 'إنستغرام'
+        : platform === 'snapchat' ? 'سناب شات' : platform === 'linkedin' ? 'لينكدين'
+        : platform === 'facebook' ? 'فيسبوك' : 'عام';
+
+      const completion = await zai.chat.completions.create({
+        messages: [
+          { role: 'system', content: `أنت مدقق محتوى تسويقي عقاري. الدرجة المبدئية: ${ruleScore}/١٠. أكد الدرجة ±١ واذكر ٢-٣ نقاط قوة وضعف محددة. أعد JSON: {"score":N,"strengths":[],"weaknesses":[],"suggestions":[]}` },
+          { role: 'user', content: `حلّل: ${cleanAdText}` },
+        ],
+        thinking: { type: 'disabled' },
+      });
+
+      const text = completion.choices[0]?.message?.content || '';
+      const clean = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+
+      // Use LLM results if valid, but clamp score to ±1 of rule-based
+      let llmScore = Number(parsed.score) || ruleScore;
+      llmScore = Math.max(ruleScore - 1, Math.min(ruleScore + 1, llmScore));
+      llmScore = Math.min(10, Math.max(1, llmScore));
+
+      return NextResponse.json({
+        success: true,
+        score: llmScore,
+        strengths: Array.isArray(parsed.strengths) ? parsed.strengths.slice(0, 4).map((s: unknown) => String(s).replace(/<[^>]*>/g, '').slice(0, 200)) : result.strengths,
+        weaknesses: Array.isArray(parsed.weaknesses) ? parsed.weaknesses.slice(0, 4).map((w: unknown) => String(w).replace(/<[^>]*>/g, '').slice(0, 200)) : result.weaknesses,
+        suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 4).map((s: unknown) => String(s).replace(/<[^>]*>/g, '').slice(0, 200)) : result.suggestions,
+      });
+    } catch {
+      // Z.AI unavailable (e.g., on Vercel) — return rule-based analysis
+      return NextResponse.json({
+        success: true,
+        ...result,
+      });
     }
-
-    // ── Validate + clamp score ──
-    // The LLM score must be within ±1 of the rule-based score for consistency.
-    let finalScore = Number(parsed.score) || ruleScore;
-    finalScore = Math.max(ruleScore - 1, Math.min(ruleScore + 1, finalScore));
-    finalScore = Math.min(10, Math.max(1, finalScore));
-
-    const strengths = Array.isArray(parsed.strengths)
-      ? parsed.strengths.slice(0, 5).map((s: unknown) => String(s).replace(/<[^>]*>/g, '').slice(0, 200))
-      : [];
-    const weaknesses = Array.isArray(parsed.weaknesses)
-      ? parsed.weaknesses.slice(0, 5).map((w: unknown) => String(w).replace(/<[^>]*>/g, '').slice(0, 200))
-      : [];
-    const suggestions = Array.isArray(parsed.suggestions)
-      ? parsed.suggestions.slice(0, 5).map((s: unknown) => String(s).replace(/<[^>]*>/g, '').slice(0, 200))
-      : [];
-
-    return NextResponse.json({
-      success: true,
-      score: finalScore,
-      strengths,
-      weaknesses,
-      suggestions,
-    });
   } catch (error) {
     console.error('Audit error:', error);
-    const errMsg = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'تعذّر تحليل الإعلان', debug: errMsg.slice(0, 200) },
+      { error: 'تعذّر تحليل الإعلان. حاول مرة أخرى.' },
       { status: 500 }
     );
   }
