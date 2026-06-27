@@ -67,7 +67,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DefaultPropertyImage from './DefaultPropertyImage';
 import ShareButtons from './ShareButtons';
-import { useVisitorId, useGenerationCount, useDailyGenerationCount, makeVariationSeed, isAdminMode } from '@/lib/visitor';
+import { useVisitorId, useGenerationCount, useDailyGenerationCount, makeVariationSeed, useAdminMode } from '@/lib/visitor';
 import {
   VARIATION_ANGLES,
   POST_MODES,
@@ -1224,7 +1224,7 @@ export default function InteractiveDemo() {
   const visitorId = useVisitorId();
   const [generationCount, bumpGenerationCount] = useGenerationCount();
   const daily = useDailyGenerationCount();
-  const adminMode = typeof window !== 'undefined' && isAdminMode();
+  const adminMode = useAdminMode();
 
   const previewRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
@@ -1413,7 +1413,7 @@ export default function InteractiveDemo() {
     // If the visitor hit the daily limit (client-side check), show a prompt
     // to register/subscribe instead of calling the API. The server enforces
     // this too (429 response), but this avoids a wasted round-trip.
-    if (daily.isLimited && !adminMode && !adminMode) {
+    if (daily.isLimited && !adminMode) {
       toast.error('بلغت الحد اليومي المجاني', {
         description: 'سجّل بالأسفل للمتابعة، أو اشترك كداعم لاستخدام بلا حدود.',
         duration: 6000,
