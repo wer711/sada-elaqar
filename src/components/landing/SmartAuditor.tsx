@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useVisitorId } from '@/lib/visitor';
+import { useVisitorId, useAdminMode } from '@/lib/visitor';
 
 const PLATFORMS = [
   { value: 'whatsapp', label: 'واتساب' },
@@ -52,6 +52,7 @@ export default function SmartAuditor() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [copiedImproved, setCopiedImproved] = useState(false);
   const visitorId = useVisitorId();
+  const adminMode = useAdminMode();
 
   // Load improve count from localStorage
   useEffect(() => {
@@ -101,7 +102,7 @@ export default function SmartAuditor() {
     if (!result) return;
 
     // Check free limit
-    if (improveCount >= FREE_IMPROVE_LIMIT) {
+    if (improveCount >= FREE_IMPROVE_LIMIT && !adminMode) {
       setShowPaywall(true);
       toast.warning('انتهت محاولاتك المجانية للتحسين', {
         description: 'اشترك كداعم مبكر للتحسين غير المحدود + كل المزايا الحصرية',
@@ -391,7 +392,7 @@ export default function SmartAuditor() {
                         <span className="flex items-center gap-2">
                           <Sparkles className="h-5 w-5" />
                           ✨ حسّن إعلانك إلى ١٠/١٠
-                          {improveCount < FREE_IMPROVE_LIMIT && (
+                          {improveCount < FREE_IMPROVE_LIMIT && !adminMode && (
                             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
                               باقي {FREE_IMPROVE_LIMIT - improveCount} مجانية
                             </span>
@@ -446,9 +447,11 @@ export default function SmartAuditor() {
                     </div>
 
                     {/* Remaining free attempts */}
-                    {improveCount < FREE_IMPROVE_LIMIT ? (
+                    {improveCount < FREE_IMPROVE_LIMIT || adminMode ? (
                       <p className="text-center text-xs text-[#5B564C]">
-                        ✨ باقي {FREE_IMPROVE_LIMIT - improveCount} محاولات تحسين مجانية
+                        {adminMode
+                          ? '✨ وضع المدير: تحسين غير محدود'
+                          : `✨ باقي ${FREE_IMPROVE_LIMIT - improveCount} محاولات تحسين مجانية`}
                       </p>
                     ) : (
                       <div className="rounded-xl border border-[#D4A853]/30 bg-gradient-to-l from-[#D4A853]/8 to-[#FBF8F2] p-4">
