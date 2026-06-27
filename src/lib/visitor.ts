@@ -14,8 +14,13 @@ const REFERRER_KEY = 'sada_referrer_id';
  * Set to 15 as a generous middle ground between the 10–20 range requested.
  * Registered founders bypass this cap (enforced server-side via visitorId lookup).
  * Referral bonuses add to this cap (e.g., 15 base + 5 bonus = 20 total).
+ *
+ * Admin mode: if the URL has ?admin=SECRET_KEY, all limits are bypassed.
  */
 export const DAILY_FREE_LIMIT = 15;
+
+// Admin secret key — change this to your own secret
+const ADMIN_SECRET = 'sada-admin-2026';
 
 /**
  * Returns a stable per-visitor ID (anonymous), persisted in localStorage.
@@ -299,5 +304,58 @@ export function getReferrerId(): string | null {
     return localStorage.getItem(REFERRER_KEY);
   } catch {
     return null;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * Admin mode — secret bypass for project owner
+ *
+ * Usage: visit the site with ?admin=sada-admin-2026 in the URL.
+ * This activates admin mode (stored in localStorage) which:
+ *   - Removes the daily generation limit (unlimited writes)
+ *   - Removes the audit/improve paywall (unlimited audits)
+ *   - Bypasses all rate limiting
+ *
+ * The admin key is checked against ADMIN_SECRET constant.
+ * To deactivate: visit with ?admin=off
+ * ═══════════════════════════════════════════════════════════════════════ */
+const ADMIN_KEY = 'sada_admin_mode';
+
+/** Checks if admin mode is active (via URL param or localStorage). */
+export function useAdminMode(): boolean {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check URL for ?admin=KEY or ?admin=off
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const adminParam = params.get('admin');
+
+      if (adminParam === ADMIN_SECRET) {
+        localStorage.setItem(ADMIN_KEY, '1');
+        setIsAdmin(true);
+        // Clean URL
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+      } else if (adminParam === 'off') {
+        localStorage.removeItem(ADMIN_KEY);
+        setIsAdmin(false);
+      } else {
+        // Check localStorage
+        setIsAdmin(localStorage.getItem(ADMIN_KEY) === '1');
+      }
+    }
+  }, []);
+
+  return isAdmin;
+}
+
+/** Checks admin mode synchronously (for non-hook contexts). */
+export function isAdminMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(ADMIN_KEY) === '1';
+  } catch {
+    return false;
   }
 }
