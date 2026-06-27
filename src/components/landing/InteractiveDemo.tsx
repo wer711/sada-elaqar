@@ -67,7 +67,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DefaultPropertyImage from './DefaultPropertyImage';
 import ShareButtons from './ShareButtons';
-import { useVisitorId, useGenerationCount, useDailyGenerationCount, makeVariationSeed } from '@/lib/visitor';
+import { useVisitorId, useGenerationCount, useDailyGenerationCount, makeVariationSeed, isAdminMode } from '@/lib/visitor';
 import {
   VARIATION_ANGLES,
   POST_MODES,
@@ -1224,6 +1224,7 @@ export default function InteractiveDemo() {
   const visitorId = useVisitorId();
   const [generationCount, bumpGenerationCount] = useGenerationCount();
   const daily = useDailyGenerationCount();
+  const adminMode = typeof window !== 'undefined' && isAdminMode();
 
   const previewRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
@@ -1412,7 +1413,7 @@ export default function InteractiveDemo() {
     // If the visitor hit the daily limit (client-side check), show a prompt
     // to register/subscribe instead of calling the API. The server enforces
     // this too (429 response), but this avoids a wasted round-trip.
-    if (daily.isLimited) {
+    if (daily.isLimited && !adminMode && !adminMode) {
       toast.error('بلغت الحد اليومي المجاني', {
         description: 'سجّل بالأسفل للمتابعة، أو اشترك كداعم لاستخدام بلا حدود.',
         duration: 6000,
@@ -1446,6 +1447,7 @@ export default function InteractiveDemo() {
           features: selectedFeatures, platform: targetPlatform, customArea, customCity,
           notes: notes.trim() || undefined,
           visitorId, variationSeed,
+          adminKey: adminMode ? 'sada-admin-2026' : undefined,
           forceAngle: opts?.forceAngle,
           isRegenerate: opts?.isRegenerate,
           optionalDetails: hasOptional ? cleanOptional : undefined,
@@ -2426,13 +2428,13 @@ export default function InteractiveDemo() {
               {/* Daily quota indicator (only meaningful on the final step where generation happens) */}
               {step >= 4 && (
                 <span className={`text-[11px] font-bold rounded-full px-3 py-1 border ${
-                  daily.isLimited
+                  daily.isLimited && !adminMode
                     ? 'bg-[#E0793C]/10 text-[#E0793C] border-[#E0793C]/30'
                     : daily.remaining <= 3
                     ? 'bg-[#D4A853]/10 text-[#D4A853] border-[#D4A853]/30'
                     : 'bg-[#0D7C66]/8 text-[#0D7C66] border-[#0D7C66]/20'
                 }`} title={`حد اليوم: ${daily.limit} كتابة`}>
-                  {daily.isLimited
+                  {daily.isLimited && !adminMode
                     ? 'بلغت الحد اليومي'
                     : `باقي ${daily.remaining} من ${daily.limit} كتابة اليوم`}
                 </span>
@@ -2442,7 +2444,7 @@ export default function InteractiveDemo() {
                   التالي <ChevronLeft className="h-4 w-4 mr-1" />
                 </Button>
               ) : (
-                <Button onClick={handleGenerate} disabled={!canProceed() || loading || daily.isLimited}
+                <Button onClick={handleGenerate} disabled={!canProceed() || loading || daily.isLimited && !adminMode}
                   data-sada-track="generate-btn" data-sada-category="content"
                   className="bg-[#0D7C66] hover:bg-[#0a6b58] text-white font-bold px-8 cursor-pointer">
                   {loading ? <><Loader2 className="h-4 w-4 animate-spin ml-1" /> جارٍ الكتابة...</>
@@ -2454,7 +2456,7 @@ export default function InteractiveDemo() {
         ) : (
           <div className="p-6">
             {/* ── Smart CTA: after 3 writings, invite to register (filtering signal) ── */}
-            {generationCount >= 3 && !daily.isLimited && (
+            {generationCount >= 3 && !daily.isLimited && !adminMode && (
               <div className="mb-5 rounded-xl border border-[#D4A853]/30 bg-gradient-to-l from-[#D4A853]/10 to-[#0D7C66]/5 p-4 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🎯</span>
@@ -2477,7 +2479,7 @@ export default function InteractiveDemo() {
               </div>
             )}
             {/* ── Daily-limit reached banner (stronger CTA) ── */}
-            {daily.isLimited && (
+            {daily.isLimited && !adminMode && (
               <div className="mb-5 rounded-xl border border-[#E0793C]/40 bg-[#E0793C]/8 p-4 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">⏰</span>
