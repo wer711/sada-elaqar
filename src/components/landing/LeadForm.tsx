@@ -739,7 +739,27 @@ export default function LeadForm() {
                         />
                       </div>
 
-                      {/* Submit button */}
+                        {/* ─── Marketing Identity (الهوية التسويقية) ─── */}
+                        <div className="pt-4 border-t border-[#E8E1D2]/50">
+                          <Label className="text-[#211F1A] font-semibold text-sm mb-2 block">
+                            🎨 أسلوبك التسويقي (اختياري — لنتعلّم أسلوبك)
+                          </Label>
+                          <p className="text-xs text-[#5B564C] mb-2 leading-relaxed">
+                            الصق إعلاناً عقارياً ناجحاً كتبته سابقاً. سنتعلّم أسلوبك (رسمي/شبابي/فخم)
+                            ونستخدمه في كل محتوى مستقبلي لك — وكأنك تملك كاتباً شخصياً.
+                          </p>
+                          <textarea
+                            {...register('styleSample')}
+                            placeholder="الصق هنا نص إعلان ناجح لك..."
+                            rows={3}
+                            maxLength={1500}
+                            className="w-full px-3 py-2 rounded-lg border border-[#E8E1D2] bg-white text-sm text-right resize-none focus:border-[#0D7C66] focus:outline-none"
+                          />
+                        </div>
+                        </div>
+                      </details>
+
+                      {/* ─── Submit button (OUTSIDE details — always visible) ─── */}
                       <Button
                         type="submit"
                         disabled={isSubmitting}
@@ -768,26 +788,6 @@ export default function LeadForm() {
                           سياسة الخصوصية
                         </button>
                       </p>
-
-                        {/* ─── Marketing Identity (الهوية التسويقية) ─── */}
-                        <div className="pt-4 border-t border-[#E8E1D2]/50">
-                          <Label className="text-[#211F1A] font-semibold text-sm mb-2 block">
-                            🎨 أسلوبك التسويقي (اختياري — لنتعلّم أسلوبك)
-                          </Label>
-                          <p className="text-xs text-[#5B564C] mb-2 leading-relaxed">
-                            الصق إعلاناً عقارياً ناجحاً كتبته سابقاً. سنتعلّم أسلوبك (رسمي/شبابي/فخم)
-                            ونستخدمه في كل محتوى مستقبلي لك — وكأنك تملك كاتباً شخصياً.
-                          </p>
-                          <textarea
-                            {...register('styleSample')}
-                            placeholder="الصق هنا نص إعلان ناجح لك..."
-                            rows={3}
-                            maxLength={1500}
-                            className="w-full px-3 py-2 rounded-lg border border-[#E8E1D2] bg-white text-sm text-right resize-none focus:border-[#0D7C66] focus:outline-none"
-                          />
-                        </div>
-                        </div>
-                      </details>
               </form>
             </CardContent>
           </Card>
