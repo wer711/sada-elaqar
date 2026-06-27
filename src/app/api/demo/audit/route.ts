@@ -197,8 +197,9 @@ ${cleanAdText}
     });
   } catch (error) {
     console.error('Audit error:', error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'تعذّر تحليل الإعلان. حاول مرة أخرى.' },
+      { error: 'تعذّر تحليل الإعلان', debug: errMsg.slice(0, 200) },
       { status: 500 }
     );
   }
