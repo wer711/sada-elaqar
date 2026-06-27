@@ -22,7 +22,12 @@ export async function POST(req: NextRequest) {
       style, platform, customArea, customCity,
       visitorId, variationSeed, forceAngle, isRegenerate,
       optionalDetails, postMode, customSections,
+      adminKey,
     } = body;
+
+    // ── Admin bypass: skip rate limiting if admin key matches ──
+    const ADMIN_SECRET = 'sada-admin-2026';
+    const isAdmin = adminKey === ADMIN_SECRET;
 
     if (!propertyType || !city || !country || !platform) {
       return NextResponse.json(
@@ -37,7 +42,7 @@ export async function POST(req: NextRequest) {
     // This is the authoritative server-side enforcement; the client-side counter
     // in visitor.ts is only for instant UX feedback.
     const DAILY_LIMIT = 15;
-    if (visitorId && typeof visitorId === 'string' && visitorId.length > 0) {
+    if (visitorId && typeof visitorId === 'string' && visitorId.length > 0 && !isAdmin) {
       try {
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const recentCount = await db.demoSession.count({
