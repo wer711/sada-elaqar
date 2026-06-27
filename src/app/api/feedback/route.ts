@@ -62,12 +62,14 @@ export async function POST(req: NextRequest) {
     // ── Sync to Google Sheets (non-blocking) ──
     // Founders → Feedback_Founder sheet (priority), free users → Feedback_Free.
     try {
-      const GOOGLE_SHEETS_WEBHOOK = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+      const GOOGLE_SHEETS_WEBHOOK = process.env.GOOGLE_SHEETS_WEBHOOK_URL
+        || 'https://script.google.com/macros/s/AKfycbwTA4CjikJ39iQSrjFG7gQzpbwr_2kud1JVhJvVamIhp-z7d2F5C8Cl4qTCqtuCoTsk9g/exec';
       if (GOOGLE_SHEETS_WEBHOOK) {
         const now = new Date().toISOString();
         await fetch(GOOGLE_SHEETS_WEBHOOK, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          redirect: 'follow',
           body: JSON.stringify({
             sheet: isPaid ? 'Feedback_Founder' : 'Feedback_Free',
             timestamp: now,
