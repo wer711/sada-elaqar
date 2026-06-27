@@ -142,15 +142,17 @@ export async function POST(req: NextRequest) {
     });
 
     // ── Sync to Google Sheets (non-blocking, best-effort) ──
-    // The webhook URL is set via GOOGLE_SHEETS_WEBHOOK_URL env var.
-    // The Apps Script routes the payload to the right sheet based on the
-    // "sheet" field. Free leads → "Leads_Free", founder leads → "Leads_Founder".
+    // Hardcoded webhook URL (Vercel env var not working in dashboard).
+    // Google Apps Script returns 302 redirect on POST — fetch follows it
+    // but may lose the body. We use text/plain to avoid CORS preflight.
     try {
-      const GOOGLE_SHEETS_WEBHOOK = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+      const GOOGLE_SHEETS_WEBHOOK = process.env.GOOGLE_SHEETS_WEBHOOK_URL
+        || 'https://script.google.com/macros/s/AKfycbwTA4CjikJ39iQSrjFG7gQzpbwr_2kud1JVhJvVamIhp-z7d2F5C8Cl4qTCqtuCoTsk9g/exec';
       if (GOOGLE_SHEETS_WEBHOOK) {
         await fetch(GOOGLE_SHEETS_WEBHOOK, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          redirect: 'follow',
           body: JSON.stringify({
             sheet: 'Leads_Free',
             leadId: lead.id,
