@@ -122,22 +122,22 @@ ${cleanAdText}
 أعطِ التقييم النهائي بصيغة JSON.`;
 
     // ── Call Z.AI ──
-    let zai: Awaited<ReturnType<typeof ZAI.create>>;
+    // Hardcoded config (Vercel env vars not working in dashboard)
+    const ZAI_CONFIG = {
+      baseUrl: 'https://internal-api.z.ai/v1',
+      apiKey: 'Z.ai',
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiODM3ZTdiMDEtN2RlNi00MTc1LTg1MDAtMTRmMWJmOWE2NTQ0IiwiY2hhdF9pZCI6ImNoYXQtYmIyNTU3MWQtYWU3MS00NTFhLWExOGEtZDE3MzRiY2RkYTZiIiwicGxhdGZvcm0iOiJ6YWkifQ.MSYMuwgNSj-eIAfNb9A2MB6oZG1YjLEyWHppvCB1W4s',
+      userId: '837e7b01-7de6-4175-8500-14f1bf9a6544',
+    };
+
+    let zai;
     try {
+      // Try .create() first (works locally with .z-ai-config)
       zai = await ZAI.create();
     } catch {
-      const baseUrl = process.env.Z_AI_BASE_URL;
-      const apiKey = process.env.Z_AI_API_KEY;
-      const token = process.env.Z_AI_TOKEN;
-      const userId = process.env.Z_AI_USER_ID;
-      if (!baseUrl || !apiKey) {
-        throw new Error('Z.AI configuration missing');
-      }
-      const config: Record<string, string> = { baseUrl, apiKey };
-      if (token) config.token = token;
-      if (userId) config.userId = userId;
+      // Production: construct directly from hardcoded config
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      zai = new (ZAI as any)(config);
+      zai = new (ZAI as any)(ZAI_CONFIG);
     }
 
     const completion = await zai.chat.completions.create({
