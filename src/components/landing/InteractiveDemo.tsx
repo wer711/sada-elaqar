@@ -59,6 +59,7 @@ import {
   Brain,
   Sparkles as SparklesIcon,
   RefreshCw,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas-pro';
@@ -67,6 +68,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DefaultPropertyImage from './DefaultPropertyImage';
 import ShareButtons from './ShareButtons';
+import VisualTemplate from './VisualTemplate';
 import { useVisitorId, useGenerationCount, useDailyGenerationCount, makeVariationSeed, useAdminMode } from '@/lib/visitor';
 import {
   VARIATION_ANGLES,
@@ -2581,6 +2583,24 @@ export default function InteractiveDemo() {
               <div className="mb-4">
                 <ShareButtons
                   text={`${currentResult.content}${currentResult.hashtags && currentResult.hashtags !== 'لا يوجد' ? '\n\n' + currentResult.hashtags : ''}`}
+                />
+              </div>
+            )}
+
+            {/* Visual Templates — downloadable as images */}
+            {currentResult && (activePlatform === 'instagram' || activePlatform === 'twitter') && (
+              <div className="mb-4 rounded-xl border border-[#E8E1D2] bg-[#FBF8F2]/50 p-4">
+                <p className="text-xs font-bold text-[#0D7C66] mb-3 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  قالب بصري جاهز للنشر ({activePlatform === 'instagram' ? 'إنستغرام' : 'إكس'})
+                </p>
+                <VisualTemplate
+                  content={currentResult}
+                  platform={activePlatform as 'instagram' | 'twitter'}
+                  propertyName={currentResult.resolvedProperty.type}
+                  location={currentResult.resolvedProperty.location}
+                  price={currentResult.resolvedProperty.price}
+                  features={currentResult.resolvedProperty.features}
                 />
               </div>
             )}
